@@ -1,54 +1,69 @@
 #include <cmark.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <linux/limits.h>
+#if (defined(LINUX) || defined(__linux__))
+#	include <linux/limits.h>
+#else
+#	include <sys/syslimits.h>
+#endif
 #include <string.h>
 #include <dirent.h>
+#include <sys/stat.h>
+
 #define BUILD_DIR "_build"
+
+int strchr_last(const char *str, char c) {
+	int len = strlen(str);
+	for(int i = len-1; i >= 0; i--) {
+		if(str[i] == c) return i;
+	}
+	return -1;
+}
+
 void copy_streaming(FILE *in, FILE *out) {
 	int c;
 	while ((c = fgetc(in)) != EOF) {
 		fputc(c, out);
 	}
+	rewind(in);
 }
 
 int has_extension(const char *filename, const char *ext) {
-	char *pExt = strchr(filename, '.');
-	return !strcmp(pExt, ext);
+	int extpos = strchr_last(filename, '.');
+	if(extpos == -1) return 0;
+	return !strcmp(filename + extpos, ext);
+}
+
+void set_extension(char *filename, const char *ext) {
+	int extpos = strchr_last(filename, '.');
+       	if(extpos != -1) {
+		*(filename + extpos) = 0;
+	}
+	strcat(filename, ext);
 }
 
 void convert_page(char *filename, FILE *header, FILE *footer) {
-	char buffer[256];
-	char full_path[PATH_MAX];
-	strcpy(full_path, "pages");
-	strcat(full_path, filename);
-	FILE *fp = fopen(full_path, "rb");
+	FILE *fp = fopen(filename, "rb");
 
 	if(fp == NULL) {
 		perror("Failed to open file");
 		return;
 	}
 
-	cmark_parser *parser = cmark_parser_new(CMARK_OPT_DEFAULT);
-
-	int bytes;
-	while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
-		cmark_parser_feed(parser, buffer, bytes);
-		if(bytes < sizeof(buffer)) {
-			break;
-		}
-	}
-
-	cmark_node *document = cmark_parser_finish(parser);
-	cmark_parser_free(parser);
+	cmark_node *document = cmark_parse_file(fp, CMARK_OPT_DEFAULT);
 	fclose(fp);
 	
 	// Write to built page
 	char outpath[PATH_MAX];
 	strcpy(outpath, BUILD_DIR "/");
 	strcat(outpath, filename);
+	set_extension(outpath, ".html");
 
 	FILE *outfp = fopen(outpath, "w");
+	if(outfp == NULL) {
+		perror("Failed to open output file");
+		return;
+	}
 	char *rendered = cmark_render_html(document, CMARK_OPT_DEFAULT);
 	
 	if(header != NULL) {
@@ -67,7 +82,15 @@ void convert_page(char *filename, FILE *header, FILE *footer) {
 void compile_templates_recursively(FILE *header, FILE *footer, char *path) {
 	struct dirent *dp;
 	DIR *dir = opendir(path);
-	while ((dp = readdir(dir)) != NULL) {
+	if(dir == NULL) {
+		printf("warning: template directory `%s` not found.\n", path);
+		return;
+	}
+	char out_path[PATH_MAX];
+	strcpy(out_path, BUILD_DIR "/");
+	strcat(out_path, path);
+	mkdir(out_path, S_IRWXU);
+	while ((dp = readdir(dir)) != NULL) if(dp->d_name[0] != '.') {
 		char file_path[PATH_MAX];
 		strcpy(file_path, path);
 		strcat(file_path, "/");
@@ -95,6 +118,7 @@ int main() {
 	FILE *header = fopen("layout/header.html", "r");
 	FILE *footer = fopen("layout/footer.html", "r");
 	
+	mkdir("_build", S_IRWXU);
 	compile_templates_recursively(header, footer, "pages");
 
 	fclose(header);
