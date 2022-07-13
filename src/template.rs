@@ -1,6 +1,8 @@
-use std::{error::Error, fs};
+use core::num::dec2flt::parse;
+use std::{error::Error, fs, collections::HashMap};
 
 use html_parser::Dom;
+use regex::Regex;
 
 use crate::markdown;
 
@@ -40,14 +42,24 @@ impl Template {
         Self::from_html(markdown::transform(markdown_in))
     }
 
-    fn render_basic(&self, template_loader: TemplateLoader, contents: Option<String>) -> Result<String, Box<dyn Error>> {
-        
+    fn render_basic(&self, template_loader: TemplateLoader, contents: Option<String>, attrs: HashMap<String, Option<String>>) -> Result<String, Box<dyn Error>> {
+        let bind_regex = Regex::new(r"\{\{(?P<var>.*?)\}\}").unwrap();
+        let all_joined = bind_regex.replace_all(&format!(
+            "{}{}{}",
+            self.top,
+            match contents {
+                Some(contents) => contents,
+                None => self.slot_default.unwrap_or("".into())
+            },
+            self.bottom.unwrap_or("".into())
+        ), "");
+        let parsed_dom = Dom::parse(&all_joined)?;
     }
 
-    pub fn render(&self, template_loader: TemplateLoader, contents: Option<String>) -> Result<String, Box<dyn Error>> {
+    pub fn render(&self, template_loader: TemplateLoader, contents: Option<String>, attrs: HashMap<String, Option<String>>) -> Result<String, Box<dyn Error>> {
         match self.extends {
-            Some(tmpl) => template_loader.load(tmpl)?.render(template_loader, Some(self.render_basic(template_loader, contents)?)),
-            None => self.render_basic(template_loader, contents)
+            Some(tmpl) => template_loader.load(tmpl)?.render(template_loader, Some(self.render_basic(template_loader, contents, attrs)?), HashMap::new()),
+            None => self.render_basic(template_loader, contents, attrs)
         }
     }
 }
