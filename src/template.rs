@@ -1,65 +1,55 @@
-use core::num::dec2flt::parse;
 use std::{error::Error, fs, collections::HashMap};
 
-use html_parser::Dom;
 use regex::Regex;
 
 use crate::markdown;
 
-pub struct Template {
-    pub top: String,
-    pub slot_default: Option<String>,
-    pub bottom: Option<String>,
+pub struct Template<'a> {
+    pub root: &'a Node,
     pub extends: Option<String>
 }
 
-impl Template {
+pub struct TemplateContext {
+    pub loader: TemplateLoader,
+    pub contents: Option<String>,
+    pub attrs: HashMap<String, Option<String>>
+}
+
+impl<'a> Template<'a> {
     pub fn from_html(html_str: String) -> Result<Self, Box<dyn Error>> {
         let dom = Dom::parse(&html_str)?;
         let contents = html_str.split("<slot>").collect::<Vec<&str>>();
+        let extends = if dom.children.get(0).map(|node| node.element().map(|el| el.name.clone())) == Some(Some("extend".into())) {
+            let extends = dom.children.get(0).map(|node| node.element()).unwrap().unwrap();
+            match extends.attributes.get("template") {
+                Some(Some(path)) => Some(path.clone()),
+                _ => None
+            }
+        } else { None };
         Ok(Self {
-            extends: if dom.children.get(0).map(|node| node.element().map(|el| el.name.clone())) == Some(Some("extend".into())) {
-                let extends = dom.children.get(0).map(|node| node.element()).unwrap().unwrap();
-                match extends.attributes.get("template") {
-                    Some(Some(path)) => Some(path.clone()),
-                    _ => None
-                }
-            } else { None },
-            top: contents.get(0).unwrap().to_owned().to_string(),
-            slot_default: if contents.len() == 2 {
-                let contents_after_open = contents.get(1).unwrap().split("</slot>").collect::<Vec<&str>>();
-                Some(contents_after_open.get(0).unwrap().to_owned().to_string())
-            } else { None },
-            bottom: if contents.len() == 2 {
-                let contents_after_open = contents.get(1).unwrap().split("</slot>").collect::<Vec<&str>>();
-                if contents_after_open.len() == 2  {
-                    Some(contents_after_open.get(1).unwrap().to_owned().to_string())
-                } else { None }
-            } else { None }
+            extends,
+            root: dom.children.iter().find(|node| node.element().map(|el| el.name) == Some("template".to_string())).expect("Template has no root; please add a `<template>` element.")
         })
     }
     pub fn from_markdown(markdown_in: String) -> Result<Self, Box<dyn Error>> {
         Self::from_html(markdown::transform(markdown_in))
     }
 
-    fn render_basic(&self, template_loader: TemplateLoader, contents: Option<String>, attrs: HashMap<String, Option<String>>) -> Result<String, Box<dyn Error>> {
+    fn expand_tree_recursive(&self, tree: &mut Node, ctx: TemplateContext) {
         let bind_regex = Regex::new(r"\{\{(?P<var>.*?)\}\}").unwrap();
-        let all_joined = bind_regex.replace_all(&format!(
-            "{}{}{}",
-            self.top,
-            match contents {
-                Some(contents) => contents,
-                None => self.slot_default.unwrap_or("".into())
-            },
-            self.bottom.unwrap_or("".into())
-        ), "");
-        let parsed_dom = Dom::parse(&all_joined)?;
+
     }
 
-    pub fn render(&self, template_loader: TemplateLoader, contents: Option<String>, attrs: HashMap<String, Option<String>>) -> Result<String, Box<dyn Error>> {
+    fn render_basic(&self, ctx: TemplateContext) -> Result<String, Box<dyn Error>> {
+        let mut root = self.root.clone();
+        self.expand_tree_recursive(&mut root, ctx);
+        Ok(root.)
+    }
+
+    pub fn render(&self, ctx: TemplateContext) -> Result<String, Box<dyn Error>> {
         match self.extends {
-            Some(tmpl) => template_loader.load(tmpl)?.render(template_loader, Some(self.render_basic(template_loader, contents, attrs)?), HashMap::new()),
-            None => self.render_basic(template_loader, contents, attrs)
+            Some(tmpl) => ctx.loader.load(tmpl)?.render(TemplateContext { loader: ctx.loader, contents: Some(self.render_basic(ctx)?), attrs: HashMap::new() }),
+            None => self.render_basic(ctx)
         }
     }
 }
