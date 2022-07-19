@@ -1,4 +1,4 @@
-use pulldown_cmark::{Options, Parser, html};
+use pulldown_cmark::{html, Options, Parser};
 
 pub fn transform(input: String) -> String {
     let options = Options::all();
