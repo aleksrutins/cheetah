@@ -1,0 +1,15 @@
+<div>
+Hello World! This is a component. {{hi}}
+</div>
+<p>Note the scoped styles, through Shadow DOM</p>
+
+<style>
+  div, p {
+    font-style: italic;
+  }
+</style>
+
+<script>
+  const root = document.currentScript.getRootNode().host;
+  root.querySelectorAll('p').forEach(p => p.textContent = "Written from a script");
+</script>

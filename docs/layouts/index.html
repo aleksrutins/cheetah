@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <html>
     <head>
@@ -6,5 +6,17 @@
     </head>
     <body>
         <slot></slot>
+        <script>
+          // https://web.dev/declarative-shadow-dom/#polyfill
+          window.onload = () => (function attachShadowRoots(root) {
+            root.querySelectorAll("template[shadowroot]").forEach(template => {
+              const mode = template.getAttribute("shadowroot");
+              const shadowRoot = template.parentNode.attachShadow({ mode });
+              shadowRoot.appendChild(template.content);
+              template.remove();
+              attachShadowRoots(shadowRoot);
+            });
+          })(document);
+        </script>
     </body>
 </html>

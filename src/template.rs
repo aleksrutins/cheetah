@@ -1,32 +1,46 @@
 use std::{
+    cell::RefCell,
     collections::{BTreeMap, HashMap},
     error::Error,
     fs,
-    ops::DerefMut,
+    ops::DerefMut, borrow::Borrow, rc::Rc, sync::Arc,
 };
-
 use html5ever::{local_name, ns, QualName};
 use kuchiki::{traits::*, Attribute, ExpandedName, NodeData, NodeRef};
 use regex::{Captures, Regex};
 
 use crate::markdown;
 
+#[derive(Clone, Debug)]
 pub struct Template {
     pub dom: NodeRef,
-    pub extends: Option<String>,
+    pub is_document: bool,
+    pub extends: Option<NodeRef>,
+    pub html_str: String,
 }
+
+#[derive(Clone, Debug)]
+pub struct ElementRegistrar {
+    pub name: String,
+    pub template: Template,
+    pub connected_scripts: Vec<String>,
+}
+
+pub type Scripts = Arc<RefCell<HashMap<String, Arc<RefCell<ElementRegistrar>>>>>;
 
 #[derive(Clone)]
 pub struct TemplateContext {
     pub loader: TemplateLoader,
     pub contents: Option<Vec<NodeRef>>,
+    pub component_name: Option<String>,
     pub attrs: BTreeMap<ExpandedName, Attribute>,
+    pub scripts: Scripts,
 }
 
 impl Template {
     fn root(&self) -> NodeRef {
         self.dom
-            .select(":root > template")
+            .select("template")
             .unwrap()
             .next()
             .unwrap_or_else(|| self.dom.select(":root").unwrap().next().unwrap())
@@ -34,17 +48,36 @@ impl Template {
             .to_owned()
     }
     pub fn from_html(html_str: String) -> Result<Self, Box<dyn Error>> {
-        let dom = kuchiki::parse_html().one(html_str);
+        let is_document = html_str.contains("<!DOCTYPE HTML>")
+        || html_str.contains("<!DOCTYPE html>")
+        || html_str.contains("<!doctype HTML>") // I don't know why anybody would _ever_ do this, but you never know...
+        || html_str.contains("<!doctype html>");
+        let dom = if is_document {
+            kuchiki::parse_html()
+        } else {
+            kuchiki::parse_fragment(
+                QualName::new(None, ns!(html), local_name!("template")),
+                vec![],
+            )
+        }
+        .one(html_str.clone());
+
         let extends = dom
             .select("extends[template]:first-child")
             .unwrap()
             .next()
-            .map(|n| n.as_node().to_owned())
-            .map(|n| n.as_element().unwrap().to_owned())
-            .map(|el| el.attributes.borrow().get("template").unwrap().to_owned())
-            .map(|s| s.to_string());
+            .map(|n| n.as_node().to_owned());
 
-        Ok(Self { extends, dom })
+        if let Some(node) = extends.as_ref() {
+            node.detach()
+        }
+
+        Ok(Self {
+            extends,
+            dom,
+            is_document,
+            html_str,
+        })
     }
     pub fn from_markdown(markdown_in: String) -> Result<Self, Box<dyn Error>> {
         Self::from_html(markdown::transform(markdown_in))
@@ -53,41 +86,85 @@ impl Template {
     fn expand_tree_recursive(
         &self,
         mut root: &mut NodeRef,
+        scripts_ref: Scripts,
+        registrar: Option<Arc<RefCell<ElementRegistrar>>>,
         ctx: &TemplateContext,
     ) -> Result<(), Box<dyn Error>> {
+        let scripts_ref_cloned = scripts_ref.clone();
+        let mut scripts = scripts_ref_cloned.borrow_mut();
         let bind_regex = Regex::new(r"\{\{(?P<var>.*?)\}\}").unwrap();
         let node = root.deref_mut();
 
         for mut child in node.children() {
-            self.expand_tree_recursive(&mut child, ctx)?;
+            let registrar = if let NodeData::Element(el) = child.data() {
+                if el.name.ns == ns!(html)
+                    && el.name.local == *"script"
+                    && ctx.component_name.is_some()
+                {
+                    if let Some(name) = &ctx.component_name {
+                        let script_name = format!("{}.registrar.js", name);
+                        if scripts.get(&script_name).is_none() {
+                            scripts.insert(
+                                script_name.clone(),
+                                Arc::new(RefCell::new(ElementRegistrar {
+                                                                    name: name.to_string(),
+                                                                    connected_scripts: vec![],
+                                                                    template: self.clone(),
+                                                                })),
+                            );
+                        }
+                        Some(scripts.get(&script_name).unwrap().clone())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+            self.expand_tree_recursive(&mut child, scripts_ref.clone(), registrar, ctx)?;
         }
 
         match node.data() {
             NodeData::Element(el) => {
                 for (name, value) in el.attributes.borrow().map.clone() {
-                    if name.ns.to_string() == "bind".to_string() {
+                    if name.local.starts_with('[') && name.local.ends_with(']') {
                         el.attributes.borrow_mut().map.insert(
-                            ExpandedName::new("", name.local.clone()),
+                            ExpandedName::new(
+                                ns!(html),
+                                name.local
+                                    .clone()
+                                    .strip_prefix('[')
+                                    .unwrap()
+                                    .strip_suffix(']')
+                                    .unwrap(),
+                            ),
                             Attribute {
                                 prefix: None,
                                 value: ctx
                                     .attrs
                                     .get(&ExpandedName::new("", value.value))
                                     .map(|attr| attr.value.clone())
-                                    .unwrap_or("".to_string()),
+                                    .unwrap_or_else(|| "".to_string()),
                             },
                         );
                     }
                 }
-                if el.name.ns == "x".to_string() {
-                    let rendered_contents =
-                        ctx.loader
-                            .load(&el.name.local.to_string())?
-                            .render(&TemplateContext {
-                                loader: ctx.loader.clone(),
-                                contents: Some(node.children().clone().collect()),
-                                attrs: el.attributes.borrow().map.clone(),
-                            })?;
+                if el.name.local.to_string().contains('-') {
+                    let (rendered_contents, new_scripts) = ctx
+                        .loader
+                        .load(&("components/".to_string() + &el.name.local.to_string() + ".html"))?
+                        .render(&TemplateContext {
+                            loader: ctx.loader.clone(),
+                            contents: Some(node.children().collect()),
+                            attrs: el.attributes.borrow().map.clone(),
+                            component_name: Some(el.name.local.to_string()),
+                            scripts: scripts_ref.clone(),
+                        })?;
+                    for (name, contents) in new_scripts {
+                        scripts.insert(name.to_string(), Arc::new(RefCell::new(contents)));
+                    }
                     let mut attrs = HashMap::new();
                     attrs.insert(
                         ExpandedName::new("", "shadowroot"),
@@ -104,16 +181,11 @@ impl Template {
                     for child in node.children() {
                         child.detach();
                     }
-                    node.append(
-                        shadow_root
-                            .as_element()
-                            .unwrap()
-                            .template_contents
-                            .as_ref()
-                            .unwrap()
-                            .clone(),
-                    );
-                } else if el.name.ns == ns!(html) && el.name.local == "slot".to_string() {
+                    node.append(shadow_root);
+                } else if el.name.ns == ns!(html)
+                    && el.name.local == *"slot"
+                    && ctx.component_name == None
+                {
                     if let Some(contents) = &ctx.contents {
                         for elem in contents {
                             node.append(elem.clone());
@@ -123,43 +195,90 @@ impl Template {
             }
             NodeData::Text(text_ref) => {
                 let mut text = text_ref.borrow_mut();
-
                 *text = bind_regex
                     .replace_all(&*text, |caps: &Captures| {
                         if let Some(name) = caps.get(1) {
                             ctx.attrs
                                 .get(&ExpandedName::new("", name.as_str()))
                                 .map(|attr| attr.value.clone())
-                                .unwrap_or("".to_string())
+                                .unwrap_or_else(|| "".to_string())
                         } else {
                             "".to_string()
                         }
                     })
                     .to_string();
+
+                if let Some(registrar) = registrar {
+                    registrar.borrow_mut().connected_scripts.push(text.to_string());
+                    node.detach();
+                };
             }
             _ => (),
         };
+        println!("{:?}", scripts);
         Ok(())
     }
 
-    fn render_basic(&self, ctx: &TemplateContext) -> Result<NodeRef, Box<dyn Error>> {
-        let mut root = self.root().clone();
-        self.expand_tree_recursive(&mut root, ctx)?;
-        Ok(root)
+    fn render_basic(&self, ctx: &TemplateContext) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
+        let mut root = self.root();
+        let scripts_ref = Arc::new(RefCell::new(HashMap::new()));
+        self.expand_tree_recursive(&mut root, scripts_ref.clone(), None, ctx)?;
+        let mut scripts = scripts_ref.borrow_mut();
+        if self.is_document {
+            let body = root.select_first("body").unwrap();
+            for name in scripts.keys() {
+                let mut attrs = HashMap::new();
+                attrs.insert(
+                    ExpandedName::new(ns!(html), "src"),
+                    Attribute {
+                        prefix: None,
+                        value: format!("/_scripts/{}", name),
+                    },
+                );
+                let node = NodeRef::new_element(
+                    QualName::new(None, ns!(html), local_name!("string")),
+                    attrs,
+                );
+                body.as_node().append(node);
+            }
+        }
+        let mut result_scripts = HashMap::new();
+
+        for (name, contents) in scripts.iter() {
+            result_scripts.insert(name.to_string(), contents.as_ref().borrow().clone());
+        }
+        Ok((root, result_scripts))
     }
 
-    pub fn render(&self, ctx: &TemplateContext) -> Result<NodeRef, Box<dyn Error>> {
+    pub fn render(&self, ctx: &TemplateContext) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
         match &self.extends {
-            Some(tmpl) => (&ctx.loader).load(tmpl)?.render(&TemplateContext {
-                loader: ctx.loader.clone(),
-                contents: Some(vec![self.render_basic(ctx)?]),
-                attrs: BTreeMap::new(),
-            }),
+            Some(tmpl) => {
+                let attrs = tmpl.as_element().unwrap().attributes.borrow();
+                let (contents, scripts) = self.render_basic(ctx)?;
+                let mut new_scripts = HashMap::new();
+                for (name, contents) in scripts {
+                    new_scripts.insert(name, Arc::new(RefCell::new(contents)));
+                }
+                (&ctx.loader)
+                    .load(&attrs.get("template").unwrap().to_string())?
+                    .render(&TemplateContext {
+                        loader: ctx.loader.clone(),
+                        contents: Some(vec![contents]),
+                        attrs: attrs.map.clone(),
+                        scripts: Arc::new(RefCell::new(new_scripts)),
+                        component_name: None,
+                    })
+            }
             None => self.render_basic(ctx),
         }
     }
-    pub fn render_to_string(&self, ctx: &TemplateContext) -> Result<String, Box<dyn Error>> {
-        Ok(self.render(ctx)?.to_string())
+    pub fn render_to_string(
+        &self,
+        ctx: &TemplateContext,
+    ) -> Result<(String, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
+        let render_result = self.render(ctx)?;
+        println!("{:#?}", render_result.1);
+        Ok((render_result.0.to_string(), render_result.1))
     }
 }
 
@@ -176,7 +295,7 @@ impl TemplateLoader {
         let contents = fs::read_to_string(self.resolve(name))?;
         Ok(
             match name
-                .split(".")
+                .split('.')
                 .collect::<Vec<&str>>()
                 .get(1)
                 .unwrap_or(&"html")
