@@ -1,13 +1,16 @@
+use html5ever::{local_name, ns, QualName};
+use kuchiki::{traits::*, Attribute, ExpandedName, NodeData, NodeRef};
+use regex::{Captures, Regex};
 use std::{
+    borrow::Borrow,
     cell::RefCell,
     collections::{BTreeMap, HashMap},
     error::Error,
     fs,
-    ops::DerefMut, borrow::Borrow, rc::Rc, sync::Arc,
+    ops::DerefMut,
+    rc::Rc,
+    sync::Arc,
 };
-use html5ever::{local_name, ns, QualName};
-use kuchiki::{traits::*, Attribute, ExpandedName, NodeData, NodeRef};
-use regex::{Captures, Regex};
 
 use crate::markdown;
 
@@ -69,7 +72,7 @@ impl Template {
             .map(|n| n.as_node().to_owned());
 
         if let Some(node) = extends.as_ref() {
-            node.detach()
+            node.detach();
         }
 
         Ok(Self {
@@ -90,12 +93,13 @@ impl Template {
         registrar: Option<Arc<RefCell<ElementRegistrar>>>,
         ctx: &TemplateContext,
     ) -> Result<(), Box<dyn Error>> {
+        println!("expand_tree {:?}", root.data());
         let scripts_ref_cloned = scripts_ref.clone();
-        let mut scripts = scripts_ref_cloned.borrow_mut();
         let bind_regex = Regex::new(r"\{\{(?P<var>.*?)\}\}").unwrap();
         let node = root.deref_mut();
 
         for mut child in node.children() {
+            let mut scripts = scripts_ref_cloned.borrow_mut();
             let registrar = if let NodeData::Element(el) = child.data() {
                 if el.name.ns == ns!(html)
                     && el.name.local == *"script"
@@ -107,10 +111,10 @@ impl Template {
                             scripts.insert(
                                 script_name.clone(),
                                 Arc::new(RefCell::new(ElementRegistrar {
-                                                                    name: name.to_string(),
-                                                                    connected_scripts: vec![],
-                                                                    template: self.clone(),
-                                                                })),
+                                    name: name.to_string(),
+                                    connected_scripts: vec![],
+                                    template: self.clone(),
+                                })),
                             );
                         }
                         Some(scripts.get(&script_name).unwrap().clone())
@@ -123,9 +127,11 @@ impl Template {
             } else {
                 None
             };
+            drop(scripts);
             self.expand_tree_recursive(&mut child, scripts_ref.clone(), registrar, ctx)?;
         }
 
+        let mut scripts = scripts_ref_cloned.borrow_mut();
         match node.data() {
             NodeData::Element(el) => {
                 for (name, value) in el.attributes.borrow().map.clone() {
@@ -209,7 +215,10 @@ impl Template {
                     .to_string();
 
                 if let Some(registrar) = registrar {
-                    registrar.borrow_mut().connected_scripts.push(text.to_string());
+                    registrar
+                        .borrow_mut()
+                        .connected_scripts
+                        .push(text.to_string());
                     node.detach();
                 };
             }
@@ -219,7 +228,10 @@ impl Template {
         Ok(())
     }
 
-    fn render_basic(&self, ctx: &TemplateContext) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
+    fn render_basic(
+        &self,
+        ctx: &TemplateContext,
+    ) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
         let mut root = self.root();
         let scripts_ref = Arc::new(RefCell::new(HashMap::new()));
         self.expand_tree_recursive(&mut root, scripts_ref.clone(), None, ctx)?;
@@ -250,7 +262,10 @@ impl Template {
         Ok((root, result_scripts))
     }
 
-    pub fn render(&self, ctx: &TemplateContext) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
+    pub fn render(
+        &self,
+        ctx: &TemplateContext,
+    ) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
         match &self.extends {
             Some(tmpl) => {
                 let attrs = tmpl.as_element().unwrap().attributes.borrow();
