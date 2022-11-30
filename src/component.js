@@ -14,7 +14,8 @@ export function registerComponent(name, template, scripts) {
         if(this.shadowRoot == null) { // Not prerendered or no declarative shadow DOM
           let mode = 'open';
           let prerendered = false;
-          if((newTemplate = this.querySelector(":scope > template[shadowroot]")) != null) { // Prerendered, but no declarative shadow DOM
+          let newTemplate = this.querySelector(":scope > template[shadowroot]");
+          if(newTemplate != null) { // Prerendered, but no declarative shadow DOM
             template = newTemplate.content;
             mode = newTemplate.getAttribute('shadowroot');
             prerendered = true;

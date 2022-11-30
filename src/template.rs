@@ -2,13 +2,11 @@ use html5ever::{local_name, ns, QualName};
 use kuchiki::{traits::*, Attribute, ExpandedName, NodeData, NodeRef};
 use regex::{Captures, Regex};
 use std::{
-    borrow::Borrow,
     cell::RefCell,
     collections::{BTreeMap, HashMap},
     error::Error,
     fs,
     ops::DerefMut,
-    rc::Rc,
     sync::Arc,
 };
 
@@ -89,20 +87,20 @@ impl Template {
     fn expand_tree_recursive(
         &self,
         mut root: &mut NodeRef,
-        scripts_ref: Scripts,
+        scripts_ref: &Scripts,
         registrar: Option<Arc<RefCell<ElementRegistrar>>>,
         ctx: &TemplateContext,
     ) -> Result<(), Box<dyn Error>> {
-        println!("expand_tree {:?}", root.data());
         let scripts_ref_cloned = scripts_ref.clone();
         let bind_regex = Regex::new(r"\{\{(?P<var>.*?)\}\}").unwrap();
         let node = root.deref_mut();
 
         for mut child in node.children() {
-            let mut scripts = scripts_ref_cloned.borrow_mut();
             let registrar = if let NodeData::Element(el) = child.data() {
+                println!("Borrowing scripts for {:?}", el);
+                let mut scripts = scripts_ref.borrow_mut();
                 if el.name.ns == ns!(html)
-                    && el.name.local == *"script"
+                    && el.name.local == local_name!("script")
                     && ctx.component_name.is_some()
                 {
                     if let Some(name) = &ctx.component_name {
@@ -119,16 +117,15 @@ impl Template {
                         }
                         Some(scripts.get(&script_name).unwrap().clone())
                     } else {
-                        None
+                        registrar.clone()
                     }
                 } else {
-                    None
+                    registrar.clone()
                 }
             } else {
-                None
+                registrar.clone()
             };
-            drop(scripts);
-            self.expand_tree_recursive(&mut child, scripts_ref.clone(), registrar, ctx)?;
+            self.expand_tree_recursive(&mut child, &scripts_ref, registrar, ctx)?;
         }
 
         let mut scripts = scripts_ref_cloned.borrow_mut();
@@ -224,7 +221,6 @@ impl Template {
             }
             _ => (),
         };
-        println!("{:?}", scripts);
         Ok(())
     }
 
@@ -233,11 +229,12 @@ impl Template {
         ctx: &TemplateContext,
     ) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
         let mut root = self.root();
-        let scripts_ref = Arc::new(RefCell::new(HashMap::new()));
-        self.expand_tree_recursive(&mut root, scripts_ref.clone(), None, ctx)?;
-        let mut scripts = scripts_ref.borrow_mut();
-        if self.is_document {
-            let body = root.select_first("body").unwrap();
+        let scripts_ref = ctx.scripts.clone();
+        self.expand_tree_recursive(&mut root, &scripts_ref, None, ctx)?;
+        let scripts = scripts_ref.borrow();
+        println!("Scripts for {:?}: {:?}", ctx.component_name, scripts);
+        if let Ok(body) = root.select_first("body") {
+            println!("Document");
             for name in scripts.keys() {
                 let mut attrs = HashMap::new();
                 attrs.insert(
@@ -259,6 +256,7 @@ impl Template {
         for (name, contents) in scripts.iter() {
             result_scripts.insert(name.to_string(), contents.as_ref().borrow().clone());
         }
+        println!("Result scripts: {:?}", result_scripts);
         Ok((root, result_scripts))
     }
 
@@ -270,17 +268,21 @@ impl Template {
             Some(tmpl) => {
                 let attrs = tmpl.as_element().unwrap().attributes.borrow();
                 let (contents, scripts) = self.render_basic(ctx)?;
-                let mut new_scripts = HashMap::new();
-                for (name, contents) in scripts {
-                    new_scripts.insert(name, Arc::new(RefCell::new(contents)));
+                let new_scripts = Arc::new(RefCell::new(HashMap::new()));
+                for (name, contents) in ctx.scripts.take() {
+                    new_scripts.borrow_mut().insert(name, contents);
                 }
+                for (name, contents) in scripts {
+                    new_scripts.borrow_mut().insert(name, Arc::new(RefCell::new(contents)));
+                }
+                println!("Scripts: {:?}", new_scripts);
                 (&ctx.loader)
                     .load(&attrs.get("template").unwrap().to_string())?
                     .render(&TemplateContext {
                         loader: ctx.loader.clone(),
                         contents: Some(vec![contents]),
                         attrs: attrs.map.clone(),
-                        scripts: Arc::new(RefCell::new(new_scripts)),
+                        scripts: new_scripts,
                         component_name: None,
                     })
             }
@@ -292,7 +294,6 @@ impl Template {
         ctx: &TemplateContext,
     ) -> Result<(String, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
         let render_result = self.render(ctx)?;
-        println!("{:#?}", render_result.1);
         Ok((render_result.0.to_string(), render_result.1))
     }
 }

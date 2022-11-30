@@ -3,10 +3,10 @@ use std::{
     error::Error,
     fmt::Display,
     fs,
-    path::PathBuf, rc::Rc, cell::RefCell, sync::Arc,
+    path::PathBuf, cell::RefCell, sync::Arc,
 };
 
-use template::{TemplateLoader, Scripts};
+use template::TemplateLoader;
 
 #[macro_use]
 extern crate html5ever;
