@@ -82,7 +82,7 @@ fn compile_templates_recursive(dir: String, loader: &TemplateLoader) -> Result<(
                     attrs: BTreeMap::new(),
                     scripts: Arc::new(RefCell::new(HashMap::new())),
                 })?;
-                fs::write(out_path, result.0)?;
+                fs::write(out_path, format!("<!doctype html>{}", result.0))?;
                 for (script_name, registrar) in result.1 {
                     let contents = format!(
                         "
