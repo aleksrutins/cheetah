@@ -6,7 +6,7 @@
     </head>
     <body>
         <slot></slot>
-        <!-- <script>
+        <script>
           // https://web.dev/declarative-shadow-dom/#polyfill
           window.onload = () => (function attachShadowRoots(root) {
             root.querySelectorAll("template[shadowroot]").forEach(template => {
@@ -17,6 +17,6 @@
               attachShadowRoots(shadowRoot);
             });
           })(document);
-        </script> -->
+        </script>
     </body>
 </html>

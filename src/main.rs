@@ -93,7 +93,7 @@ registerComponent(`{}`, `{}`, [{}]);
                         registrar
                             .connected_scripts
                             .iter()
-                            .map(|script| format!("() => {{{}}}", script))
+                            .map(|script| format!("async function() {{{}}}", script))
                             .collect::<Vec<_>>()
                             .join(", ")
                     );

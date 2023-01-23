@@ -115,11 +115,15 @@ impl Template {
                                 })),
                             );
                         }
-                        Some(scripts.get(&script_name).unwrap().clone())
+                        let script = scripts.get(&script_name).unwrap().clone();
+                        drop(scripts);
+                        Some(script)
                     } else {
+                        drop(scripts);
                         registrar.clone()
                     }
                 } else {
+                    drop(scripts);
                     registrar.clone()
                 }
             } else {
@@ -128,7 +132,6 @@ impl Template {
             self.expand_tree_recursive(&mut child, &scripts_ref, registrar, ctx)?;
         }
 
-        let mut scripts = scripts_ref_cloned.borrow_mut();
         match node.data() {
             NodeData::Element(el) => {
                 for (name, value) in el.attributes.borrow().map.clone() {
@@ -165,6 +168,7 @@ impl Template {
                             component_name: Some(el.name.local.to_string()),
                             scripts: scripts_ref.clone(),
                         })?;
+                    let mut scripts = scripts_ref_cloned.borrow_mut();
                     for (name, contents) in new_scripts {
                         scripts.insert(name.to_string(), Arc::new(RefCell::new(contents)));
                     }
@@ -238,14 +242,18 @@ impl Template {
             for name in scripts.keys() {
                 let mut attrs = HashMap::new();
                 attrs.insert(
-                    ExpandedName::new(ns!(html), "src"),
+                    ExpandedName::new("", "src"),
                     Attribute {
                         prefix: None,
                         value: format!("/_scripts/{}", name),
                     },
                 );
+                attrs.insert(
+                    ExpandedName::new("", "type"),
+                    Attribute { prefix: None, value: "module".into() }
+                );
                 let node = NodeRef::new_element(
-                    QualName::new(None, ns!(html), local_name!("string")),
+                    QualName::new(None, ns!(html), local_name!("script")),
                     attrs,
                 );
                 body.as_node().append(node);

@@ -3,6 +3,8 @@ Hello World! This is a component. {{hi}}
 </div>
 <p>Note the scoped styles, through Shadow DOM</p>
 
+<button id="clickMe">Click Me</button>
+
 <style>
   div, p {
     font-style: italic;
@@ -10,6 +12,7 @@ Hello World! This is a component. {{hi}}
 </style>
 
 <script>
-  const root = document.currentScript.getRootNode().host;
-  root.querySelectorAll('p').forEach(p => p.textContent = "Written from a script");
+  this.shadowRoot.querySelector("button#clickMe").addEventListener('click', () => {
+    this.shadowRoot.querySelectorAll('p').forEach(p => p.textContent = "Written from a script")
+  });
 </script>
