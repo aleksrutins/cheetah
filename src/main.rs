@@ -32,12 +32,14 @@ impl Display for CompileError {
 
 fn copy_assets_recursive(dir: String) -> Result<(), Box<dyn Error>> {
     if let Ok(assets) = fs::read_dir("assets") {
+        fs::create_dir_all("_build/pages/assets")?;
         for asset in assets.flatten() {
             if asset.file_type()?.is_dir() {
                 let full_path = format!("{}/{}", dir, asset.file_name().to_string_lossy());
                 fs::create_dir_all(&full_path)?;
                 copy_assets_recursive(full_path)?;
             } else {
+                println!("Copying asset \x1b[1m{}\x1b[0m", asset.path().to_string_lossy());
                 fs::copy(
                     asset.path(),
                     format!(
