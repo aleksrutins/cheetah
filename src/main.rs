@@ -3,7 +3,7 @@ use std::{
     error::Error,
     fmt::Display,
     fs,
-    path::PathBuf, cell::RefCell, sync::Arc, time::SystemTime,
+    path::PathBuf, cell::RefCell, sync::Arc, time::SystemTime, env,
 };
 
 use template::TemplateLoader;
@@ -12,6 +12,7 @@ use template::TemplateLoader;
 extern crate html5ever;
 mod markdown;
 mod template;
+mod server;
 
 const BUILD_DIR: &str = "_build";
 
@@ -31,12 +32,12 @@ impl Display for CompileError {
 }
 
 fn copy_assets_recursive(dir: String) -> Result<(), Box<dyn Error>> {
-    if let Ok(assets) = fs::read_dir("assets") {
+    if let Ok(assets) = fs::read_dir(dir.clone()) {
         fs::create_dir_all("_build/pages/assets")?;
         for asset in assets.flatten() {
             if asset.file_type()?.is_dir() {
                 let full_path = format!("{}/{}", dir, asset.file_name().to_string_lossy());
-                fs::create_dir_all(&full_path)?;
+                fs::create_dir_all(format!("_build/pages/{}", full_path))?;
                 copy_assets_recursive(full_path)?;
             } else {
                 println!("Copying asset \x1b[1m{}\x1b[0m", asset.path().to_string_lossy());
@@ -55,10 +56,45 @@ fn copy_assets_recursive(dir: String) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn compile_template(path: PathBuf, loader: &TemplateLoader) -> Result<(), Box<dyn Error>> {
+    let template = loader.load(&path.to_string_lossy().to_string())?;
+    println!("Building page \x1b[1m{}\x1b[0m", path.to_string_lossy());
+    let mut html_path = path;
+    html_path.set_extension("html");
+    let out_path = format!("{}/{}", BUILD_DIR, html_path.to_string_lossy());
+    let result = template.render_to_string(&template::TemplateContext {
+        loader: loader.clone(),
+        contents: None,
+        component_name: None,
+        attrs: BTreeMap::new(),
+        scripts: Arc::new(RefCell::new(HashMap::new())),
+    })?;
+    fs::write(out_path, format!("<!doctype html>{}", result.0))?;
+    for (script_name, registrar) in result.1 {
+        let contents = format!(
+            "
+import {{ registerComponent }} from './component.js';
+
+registerComponent(`{}`, `{}`, [{}]);
+        ",
+            registrar.name,
+            registrar.template.html_str,
+            registrar
+                .connected_scripts
+                .iter()
+                .map(|script| format!("async function() {{{}}}", script))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        fs::write(format!("_build/pages/_scripts/{}", script_name), contents)?;
+    }
+    Ok(())
+}
+
 fn compile_templates_recursive(dir: String, loader: &TemplateLoader) -> Result<(), Box<dyn Error>> {
     if let Ok(pages) = fs::read_dir(loader.resolve(&dir)) {
         for entry in pages.flatten() {
-            let mut full_path = PathBuf::from(format!(
+            let full_path = PathBuf::from(format!(
                 "{}/{}",
                 dir,
                 entry
@@ -71,36 +107,7 @@ fn compile_templates_recursive(dir: String, loader: &TemplateLoader) -> Result<(
                 fs::create_dir_all(out_path)?;
                 compile_templates_recursive(full_path.to_string_lossy().to_string(), loader)?;
             } else {
-                let template = loader.load(&full_path.to_string_lossy().to_string())?;
-                println!("Building page \x1b[1m{}\x1b[0m", full_path.to_string_lossy());
-                full_path.set_extension("html");
-                let out_path = format!("{}/{}", BUILD_DIR, full_path.to_string_lossy());
-                let result = template.render_to_string(&template::TemplateContext {
-                    loader: loader.clone(),
-                    contents: None,
-                    component_name: None,
-                    attrs: BTreeMap::new(),
-                    scripts: Arc::new(RefCell::new(HashMap::new())),
-                })?;
-                fs::write(out_path, format!("<!doctype html>{}", result.0))?;
-                for (script_name, registrar) in result.1 {
-                    let contents = format!(
-                        "
-import {{ registerComponent }} from './component.js';
-
-registerComponent(`{}`, `{}`, [{}]);
-                    ",
-                        registrar.name,
-                        registrar.template.html_str,
-                        registrar
-                            .connected_scripts
-                            .iter()
-                            .map(|script| format!("async function() {{{}}}", script))
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    );
-                    fs::write(format!("_build/pages/_scripts/{}", script_name), contents)?;
-                }
+                compile_template(full_path, loader)?;   
             }
         }
     }
@@ -109,19 +116,25 @@ registerComponent(`{}`, `{}`, [{}]);
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let start = SystemTime::now();
-    let loader = TemplateLoader::default();
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 && args[1] == *"dev" {
+        server::run()
+    } else {
+        let start = SystemTime::now();
+        let loader = TemplateLoader::default();
 
-    fs::create_dir_all("_build/pages/_scripts")?;
-    compile_templates_recursive("pages".to_string(), &loader)?;
+        fs::create_dir_all("_build/pages/_scripts")?;
+        compile_templates_recursive("pages".to_string(), &loader)?;
 
-    fs::write(
-        "_build/pages/_scripts/component.js",
-        include_str!("component.js"),
-    )?;
+        fs::write(
+            "_build/pages/_scripts/component.js",
+            include_str!("component.js"),
+        )?;
 
-    copy_assets_recursive("assets".to_string())?;
+        copy_assets_recursive("assets".to_string())?;
 
-    println!("\x1b[1mFinished in {}ms\x1b[0m", SystemTime::now().duration_since(start).unwrap().as_millis());
-    Ok(())
+        println!("\x1b[1mFinished in {}ms\x1b[0m", SystemTime::now().duration_since(start).unwrap().as_millis());
+
+        Ok(())
+    }
 }

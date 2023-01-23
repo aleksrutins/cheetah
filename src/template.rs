@@ -133,11 +133,12 @@ impl Template {
 
         match node.data() {
             NodeData::Element(el) => {
-                for (name, value) in el.attributes.borrow().map.clone() {
+                let mut attrs = el.attributes.borrow_mut();
+                for (name, value) in attrs.map.clone() {
                     if name.local.starts_with('[') && name.local.ends_with(']') {
-                        el.attributes.borrow_mut().map.insert(
+                        attrs.map.insert(
                             ExpandedName::new(
-                                ns!(html),
+                                "",
                                 name.local
                                     .clone()
                                     .strip_prefix('[')
@@ -156,6 +157,7 @@ impl Template {
                         );
                     }
                 }
+                drop(attrs);
                 if el.name.local.to_string().contains('-') {
                     let (rendered_contents, new_scripts) = ctx
                         .loader

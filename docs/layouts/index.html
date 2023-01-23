@@ -3,21 +3,16 @@
 <html>
     <head>
         <title>Hyena</title>
-        <link rel="stylesheet" href="/assets/page.css">
+        <link rel="stylesheet" href="/assets/css/page.css">
     </head>
     <body>
-        <slot></slot>
-        <script>
-          // https://web.dev/declarative-shadow-dom/#polyfill
-          window.onload = () => (function attachShadowRoots(root) {
-            root.querySelectorAll("template[shadowroot]").forEach(template => {
-              const mode = template.getAttribute("shadowroot");
-              const shadowRoot = template.parentNode.attachShadow({ mode });
-              shadowRoot.appendChild(template.content);
-              template.remove();
-              attachShadowRoots(shadowRoot);
-            });
-          })(document);
+        <site-toc></site-toc>
+        <div id="page-content">
+          <slot></slot>
+        </div>
+        <script type="module">
+          import { hydrateShadowRoots } from "https://cdn.skypack.dev/@webcomponents/template-shadowroot"
+          hydrateShadowRoots(document.body)
         </script>
     </body>
 </html>
