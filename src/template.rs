@@ -97,7 +97,6 @@ impl Template {
 
         for mut child in node.children() {
             let registrar = if let NodeData::Element(el) = child.data() {
-                println!("Borrowing scripts for {:?}", el);
                 let mut scripts = scripts_ref.borrow_mut();
                 if el.name.ns == ns!(html)
                     && el.name.local == local_name!("script")
@@ -236,9 +235,7 @@ impl Template {
         let scripts_ref = ctx.scripts.clone();
         self.expand_tree_recursive(&mut root, &scripts_ref, None, ctx)?;
         let scripts = scripts_ref.borrow();
-        println!("Scripts for {:?}: {:?}", ctx.component_name, scripts);
         if let Ok(body) = root.select_first("body") {
-            println!("Document");
             for name in scripts.keys() {
                 let mut attrs = HashMap::new();
                 attrs.insert(
@@ -264,7 +261,6 @@ impl Template {
         for (name, contents) in scripts.iter() {
             result_scripts.insert(name.to_string(), contents.as_ref().borrow().clone());
         }
-        println!("Result scripts: {:?}", result_scripts);
         Ok((root, result_scripts))
     }
 
@@ -283,7 +279,6 @@ impl Template {
                 for (name, contents) in scripts {
                     new_scripts.borrow_mut().insert(name, Arc::new(RefCell::new(contents)));
                 }
-                println!("Scripts: {:?}", new_scripts);
                 (&ctx.loader)
                     .load(&attrs.get("template").unwrap().to_string())?
                     .render(&TemplateContext {

@@ -3,7 +3,7 @@ use std::{
     error::Error,
     fmt::Display,
     fs,
-    path::PathBuf, cell::RefCell, sync::Arc,
+    path::PathBuf, cell::RefCell, sync::Arc, time::SystemTime,
 };
 
 use template::TemplateLoader;
@@ -70,6 +70,7 @@ fn compile_templates_recursive(dir: String, loader: &TemplateLoader) -> Result<(
                 compile_templates_recursive(full_path.to_string_lossy().to_string(), loader)?;
             } else {
                 let template = loader.load(&full_path.to_string_lossy().to_string())?;
+                println!("Building page \x1b[1m{}\x1b[0m", full_path.to_string_lossy());
                 full_path.set_extension("html");
                 let out_path = format!("{}/{}", BUILD_DIR, full_path.to_string_lossy());
                 let result = template.render_to_string(&template::TemplateContext {
@@ -81,7 +82,6 @@ fn compile_templates_recursive(dir: String, loader: &TemplateLoader) -> Result<(
                 })?;
                 fs::write(out_path, result.0)?;
                 for (script_name, registrar) in result.1 {
-                    println!("script> {}", script_name);
                     let contents = format!(
                         "
 import {{ registerComponent }} from './component.js';
@@ -107,6 +107,7 @@ registerComponent(`{}`, `{}`, [{}]);
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let start = SystemTime::now();
     let loader = TemplateLoader::default();
 
     fs::create_dir_all("_build/pages/_scripts")?;
@@ -119,5 +120,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     copy_assets_recursive("assets".to_string())?;
 
+    println!("\x1b[1mFinished in {}ms\x1b[0m", SystemTime::now().duration_since(start).unwrap().as_millis());
     Ok(())
 }
