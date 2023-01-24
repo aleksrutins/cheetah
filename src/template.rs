@@ -164,7 +164,7 @@ impl Template {
                         .load(&("components/".to_string() + &el.name.local.to_string() + ".html"))?
                         .render(&TemplateContext {
                             loader: ctx.loader.clone(),
-                            contents: Some(node.children().collect()),
+                            contents: None,
                             attrs: el.attributes.borrow().map.clone(),
                             component_name: Some(el.name.local.to_string()),
                             scripts: scripts_ref.clone(),
@@ -186,9 +186,6 @@ impl Template {
                         attrs,
                     );
                     shadow_root.append(rendered_contents);
-                    for child in node.children() {
-                        child.detach();
-                    }
                     node.append(shadow_root);
                 } else if el.name.ns == ns!(html)
                     && el.name.local == *"slot"
