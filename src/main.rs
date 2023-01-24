@@ -78,7 +78,7 @@ import {{ registerComponent }} from './component.js';
 registerComponent(`{}`, `{}`, [{}]);
         ",
             registrar.name,
-            registrar.template.html_str,
+            registrar.template.html_str.replace('`', "\\`").replace("${", "\\${"),
             registrar
                 .connected_scripts
                 .iter()
