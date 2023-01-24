@@ -3,8 +3,6 @@ Hello World! This is a component. {{hi}}
 </div>
 <p>Note the scoped styles, through Shadow DOM</p>
 
-<button id="clickMe">Click Me</button>
-
 <other-thing />
 
 <style>
@@ -12,9 +10,3 @@ Hello World! This is a component. {{hi}}
     font-style: italic;
   }
 </style>
-
-<script>
-  this.shadowRoot.querySelector("button#clickMe").addEventListener('click', () => {
-    this.shadowRoot.querySelectorAll('p').forEach(p => p.textContent = "Written from a script")
-  });
-</script>
