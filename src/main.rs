@@ -115,10 +115,11 @@ fn compile_templates_recursive(dir: String, loader: &TemplateLoader) -> Result<(
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 && args[1] == *"dev" {
-        server::run()
+        server::run().await
     } else {
         let start = SystemTime::now();
         let loader = TemplateLoader::default();
