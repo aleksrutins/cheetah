@@ -1,9 +1,13 @@
 use std::{
+    cell::RefCell,
     collections::{BTreeMap, HashMap},
+    env,
     error::Error,
     fmt::Display,
     fs,
-    path::PathBuf, cell::RefCell, sync::Arc, time::SystemTime, env,
+    path::PathBuf,
+    sync::Arc,
+    time::SystemTime,
 };
 
 use template::TemplateLoader;
@@ -11,8 +15,8 @@ use template::TemplateLoader;
 #[macro_use]
 extern crate html5ever;
 mod markdown;
-mod template;
 mod server;
+mod template;
 
 const BUILD_DIR: &str = "_build";
 
@@ -40,7 +44,10 @@ fn copy_assets_recursive(dir: String) -> Result<(), Box<dyn Error>> {
                 fs::create_dir_all(format!("_build/pages/{}", full_path))?;
                 copy_assets_recursive(full_path)?;
             } else {
-                println!("Copying asset \x1b[1m{}\x1b[0m", asset.path().to_string_lossy());
+                println!(
+                    "Copying asset \x1b[1m{}\x1b[0m",
+                    asset.path().to_string_lossy()
+                );
                 fs::copy(
                     asset.path(),
                     format!(
@@ -78,7 +85,11 @@ import {{ registerComponent }} from './component.js';
 registerComponent(`{}`, `{}`, [{}]);
         ",
             registrar.name,
-            registrar.template.html_str.replace('`', "\\`").replace("${", "\\${"),
+            registrar
+                .template
+                .html_str
+                .replace('`', "\\`")
+                .replace("${", "\\${"),
             registrar
                 .connected_scripts
                 .iter()
@@ -107,7 +118,7 @@ fn compile_templates_recursive(dir: String, loader: &TemplateLoader) -> Result<(
                 fs::create_dir_all(out_path)?;
                 compile_templates_recursive(full_path.to_string_lossy().to_string(), loader)?;
             } else {
-                compile_template(full_path, loader)?;   
+                compile_template(full_path, loader)?;
             }
         }
     }
@@ -134,7 +145,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         copy_assets_recursive("assets".to_string())?;
 
-        println!("\x1b[1mFinished in {}ms\x1b[0m", SystemTime::now().duration_since(start).unwrap().as_millis());
+        println!(
+            "\x1b[1mFinished in {}ms\x1b[0m",
+            SystemTime::now().duration_since(start).unwrap().as_millis()
+        );
 
         Ok(())
     }

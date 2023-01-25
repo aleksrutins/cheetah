@@ -128,7 +128,7 @@ impl Template {
             } else {
                 registrar.clone()
             };
-            self.expand_tree_recursive(&mut child, &scripts_ref, registrar, ctx)?;
+            self.expand_tree_recursive(&mut child, scripts_ref, registrar, ctx)?;
         }
 
         match node.data() {
@@ -161,7 +161,7 @@ impl Template {
                 if el.name.local.to_string().contains('-') {
                     let (rendered_contents, new_scripts) = ctx
                         .loader
-                        .load(&("components/".to_string() + &el.name.local.to_string() + ".html"))?
+                        .load(&("components/".to_string() + &el.name.local + ".html"))?
                         .render(&TemplateContext {
                             loader: ctx.loader.clone(),
                             contents: None,
@@ -189,7 +189,7 @@ impl Template {
                     node.append(shadow_root);
                 } else if el.name.ns == ns!(html)
                     && el.name.local == *"slot"
-                    && ctx.component_name == None
+                    && ctx.component_name.is_none()
                 {
                     if let Some(contents) = &ctx.contents {
                         for elem in contents {
@@ -201,7 +201,7 @@ impl Template {
             NodeData::Text(text_ref) => {
                 let mut text = text_ref.borrow_mut();
                 *text = bind_regex
-                    .replace_all(&*text, |caps: &Captures| {
+                    .replace_all(&text, |caps: &Captures| {
                         if let Some(name) = caps.get(1) {
                             ctx.attrs
                                 .get(&ExpandedName::new("", name.as_str()))
@@ -246,7 +246,10 @@ impl Template {
                 );
                 attrs.insert(
                     ExpandedName::new("", "type"),
-                    Attribute { prefix: None, value: "module".into() }
+                    Attribute {
+                        prefix: None,
+                        value: "module".into(),
+                    },
                 );
                 let node = NodeRef::new_element(
                     QualName::new(None, ns!(html), local_name!("script")),
@@ -276,9 +279,11 @@ impl Template {
                     new_scripts.borrow_mut().insert(name, contents);
                 }
                 for (name, contents) in scripts {
-                    new_scripts.borrow_mut().insert(name, Arc::new(RefCell::new(contents)));
+                    new_scripts
+                        .borrow_mut()
+                        .insert(name, Arc::new(RefCell::new(contents)));
                 }
-                (&ctx.loader)
+                ctx.loader
                     .load(&attrs.get("template").unwrap().to_string())?
                     .render(&TemplateContext {
                         loader: ctx.loader.clone(),
