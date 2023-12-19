@@ -175,7 +175,7 @@ impl Template {
                     }
                     let mut attrs = HashMap::new();
                     attrs.insert(
-                        ExpandedName::new("", "shadowroot"),
+                        ExpandedName::new("", "shadowrootmode"),
                         Attribute {
                             prefix: None,
                             value: "open".to_string(),

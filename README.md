@@ -6,9 +6,9 @@
 
 ```javascript
 // https://web.dev/declarative-shadow-dom/#polyfill
-window.onload = () => (function attachShadowRoots(root) {
-  root.querySelectorAll("template[shadowroot]").forEach(template => {
-    const mode = template.getAttribute("shadowroot");
+(function attachShadowRoots(root) {
+  root.querySelectorAll("template[shadowrootmode]").forEach(template => {
+    const mode = template.getAttribute("shadowrootmode");
     const shadowRoot = template.parentNode.attachShadow({ mode });
     shadowRoot.appendChild(template.content);
     template.remove();
