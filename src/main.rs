@@ -78,6 +78,9 @@ fn compile_template(path: PathBuf, loader: &TemplateLoader) -> Result<(), Box<dy
     })?;
     fs::write(out_path, format!("<!doctype html>{}", result.0))?;
     for (script_name, registrar) in result.1 {
+        let mut scripts = registrar.connected_scripts;
+        scripts.sort();
+        scripts.dedup();
         let contents = format!(
             "
 import {{ registerComponent }} from './component.js';
@@ -90,8 +93,7 @@ registerComponent(`{}`, `{}`, [{}]);
                 .html_str
                 .replace('`', "\\`")
                 .replace("${", "\\${"),
-            registrar
-                .connected_scripts
+            scripts
                 .iter()
                 .map(|script| format!("async function() {{{}}}", script))
                 .collect::<Vec<_>>()
