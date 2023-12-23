@@ -1,0 +1,54 @@
+<button id="increment">+</button>
+<span id="count">0</span>
+<button id="decrement">-</button>
+
+<style>
+    :host {
+        display: block;
+        box-sizing: content-box;
+        padding: 5px;
+        padding-right: 8px;
+        border-radius: 10px;
+
+        width: min-content;
+
+        background-color: #f6f6f7;
+    }
+
+    button, span {
+        display: block;
+        text-align: center;
+        width: 100%;
+        margin: 2px;
+    }
+
+    button {
+        border-radius: 5px;
+        border: none;
+        background-color: #299c63;
+        color: white;
+        padding: 5px;
+
+        padding-left: 20px;
+        padding-right: 20px;
+
+        font-size: medium;
+
+        &:hover {
+            background-color: #299f68;
+        }
+        &:active {
+            background-color: #238554;
+        }
+    }
+</style>
+
+<script>
+    const decrement = this.shadowRoot.querySelector("#decrement");
+    const increment = this.shadowRoot.querySelector("#increment");
+
+    const count = this.shadowRoot.querySelector("#count");
+
+    increment.addEventListener('click', () => count.textContent = parseInt(count.textContent) + 1);
+    decrement.addEventListener('click', () => count.textContent = parseInt(count.textContent) - 1);
+</script>

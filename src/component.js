@@ -1,3 +1,9 @@
+/*
+ * component.js
+ * part of the Hyena static site generator (https://hyena.farthergate.com)
+ * copyright (C) 2023 Aleks Rūtiņš <aleks@rutins.com> under the MIT License
+ */
+
 function parseFragment(content) {
   let template = document.createElement('template');
   template.innerHTML = content;

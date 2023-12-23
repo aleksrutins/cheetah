@@ -3,14 +3,21 @@
 <html>
     <head>
         <title>Hyena</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <link rel="modulepreload" href="/_scripts/component.js">
+        <link rel="modulepreload" href="https://cdn.skypack.dev/@webcomponents/template-shadowroot">
+        <link rel="modulepreload" href="/assets/vendor/highlight/es/core.min.js">
+        <link rel="modulepreload" href="/assets/vendor/highlight/es/languages/javascript.js">
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:300,400,600,700&display=swap">
+        <link rel="stylesheet" href="/assets/vendor/highlight/styles/atom-one-light.css">
         <style>
-          @import url(https://fonts.bunny.net/css?family=inter:300,400,600,700);
-
           html, body {
               padding: 0;
               margin: 0;
               width: 100vw;
-              height: 100vh;
+              min-height: 100vh;
           }
           body {
               font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -21,7 +28,17 @@
 
           #page-content {
               padding: 20px;
-              width: 85vw;
+              width: 1fr;
+          }
+
+          blockquote {
+              border-left: 3px solid #1d6e48;
+              color: #1d6e48;
+              background-color: rgba(116, 183, 153, 0.31);
+              margin-left: 0;
+              padding-left: 2em;
+              padding-top: 5px;
+              padding-bottom: 5px;
           }
         </style>
     </head>
@@ -32,7 +49,18 @@
         </div>
         <script type="module">
           import { hydrateShadowRoots } from "https://cdn.skypack.dev/@webcomponents/template-shadowroot"
+          import hljs from "/assets/vendor/highlight/es/core.min.js";
+          import javascript from "/assets/vendor/highlight/es/languages/javascript.js";
+          import xml from "/assets/vendor/highlight/es/languages/xml.js";
+          import css from "/assets/vendor/highlight/es/languages/css.js";
+
           hydrateShadowRoots(document.body)
+
+          hljs.registerLanguage('javascript', javascript)
+          hljs.registerLanguage('css', css)
+          hljs.registerLanguage('xml', xml)
+          hljs.registerLanguage('html', xml)
+          hljs.highlightAll()
         </script>
     </body>
 </html>

@@ -30,6 +30,8 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
             // if event.kind != EventKind::Access(AccessKind::Close(notify::event::AccessMode::Write)) { return }
             for path in event.paths {
                 if path.exists() {
+                    let recompile_start = SystemTime::now();
+
                     let relative_path =
                         pathdiff::diff_paths(&path, env::current_dir().unwrap()).unwrap();
                     if relative_path.starts_with("_build/") {
@@ -67,6 +69,10 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
                         )
                         .unwrap();
                     }
+                    println!(
+                        "Rebuild finished in \x1b[1m{}ms\x1b[0m",
+                        SystemTime::now().duration_since(recompile_start).unwrap().as_millis()
+                    );
                 }
             }
         }
@@ -75,7 +81,7 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
 
     watcher.watch(Path::new("."), RecursiveMode::Recursive)?;
 
-    println!("Starting server.");
+    println!("Starting server on port 3000.");
 
     let fileserver = warp::filters::fs::dir("_build/pages");
 
