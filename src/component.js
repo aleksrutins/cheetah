@@ -1,6 +1,6 @@
 /*
  * component.js
- * part of the Hyena static site generator (https://hyena.farthergate.com)
+ * part of the Cheetah static site generator (https://Cheetah.farthergate.com)
  * copyright (C) 2023 Aleks Rūtiņš <aleks@rutins.com> under the MIT License
  */
 

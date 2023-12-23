@@ -1,4 +1,4 @@
-# Hyena
+# Cheetah
 
 > A static site generator written in Rust.
 

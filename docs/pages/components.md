@@ -33,7 +33,7 @@
 </style>
 
 # Components
-Components are the basic building block of a Hyena site, and
+Components are the basic building block of a Cheetah site, and
 enable more complex behaviors through client-side JavaScript.
 For instance, here's a counter:
 
@@ -73,14 +73,14 @@ site header might look like this:
 
 </div>
 
-Hyena uses the magic of [declarative shadow DOM](https://developer.chrome.com/docs/css-ui/declarative-shadow-dom)
+Cheetah uses the magic of [declarative shadow DOM](https://developer.chrome.com/docs/css-ui/declarative-shadow-dom)
 to make components work, so styles, scripts, and even IDs
 are scoped to the component.
 
 Speaking of scripts, to make more complicated components
 (like the counter above), you'll want some JavaScript.
 For this, just put a `<script>` tag in your component.
-This script will be converted by Hyena into its own separate
+This script will be converted by Cheetah into its own separate
 file, with your code in a function which is called with the [custom element](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements)
 that your component is hydrated with as `this`.
 
