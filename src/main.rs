@@ -6,8 +6,7 @@ use std::{
     fmt::Display,
     fs,
     path::PathBuf,
-    sync::Arc,
-    time::{Duration, SystemTime},
+    time::{Duration, SystemTime}, rc::Rc,
 };
 
 use indicatif::{ProgressBar, ProgressStyle};
@@ -82,7 +81,7 @@ fn compile_template(
         contents: None,
         component_name: None,
         attrs: BTreeMap::new(),
-        scripts: Arc::new(RefCell::new(HashMap::new())),
+        scripts: Rc::new(RefCell::new(HashMap::new())),
     })?;
     fs::write(out_path, format!("<!doctype html>{}", output))?;
     for (script_name, registrar) in scripts {
@@ -172,7 +171,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         copy_assets_recursive("assets".to_string(), &progress)?;
 
         progress.finish_with_message(format!(
-            "\x1b[1mFinished in {}ms\x1b[0m",
+            "Built in \x1b[1m{}ms\x1b[0m",
             SystemTime::now().duration_since(start).unwrap().as_millis()
         ));
 

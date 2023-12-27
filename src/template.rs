@@ -6,8 +6,7 @@ use std::{
     collections::{BTreeMap, HashMap},
     error::Error,
     fs,
-    ops::DerefMut,
-    sync::Arc,
+    ops::DerefMut, rc::Rc,
 };
 
 use crate::{config::SETTINGS, markdown};
@@ -27,7 +26,7 @@ pub struct ElementRegistrar {
     pub connected_scripts: Vec<String>,
 }
 
-pub type Scripts = Arc<RefCell<HashMap<String, Arc<RefCell<ElementRegistrar>>>>>;
+pub type Scripts = Rc<RefCell<HashMap<String, Rc<RefCell<ElementRegistrar>>>>>;
 
 #[derive(Clone)]
 pub struct TemplateContext {
@@ -88,7 +87,7 @@ impl Template {
         &self,
         mut root: &mut NodeRef,
         scripts_ref: &Scripts,
-        registrar: Option<Arc<RefCell<ElementRegistrar>>>,
+        registrar: Option<Rc<RefCell<ElementRegistrar>>>,
         ctx: &TemplateContext,
     ) -> Result<(), Box<dyn Error>> {
         let scripts_ref_cloned = scripts_ref.clone();
@@ -104,7 +103,7 @@ impl Template {
                 if scripts.get(&script_name).is_none() {
                     scripts.insert(
                         script_name.clone(),
-                        Arc::new(RefCell::new(ElementRegistrar {
+                        Rc::new(RefCell::new(ElementRegistrar {
                             name: name.to_string(),
                             connected_scripts: vec![],
                             template: self.clone(),
@@ -127,7 +126,7 @@ impl Template {
                         if scripts.get(&script_name).is_none() {
                             scripts.insert(
                                 script_name.clone(),
-                                Arc::new(RefCell::new(ElementRegistrar {
+                                Rc::new(RefCell::new(ElementRegistrar {
                                     name: name.to_string(),
                                     connected_scripts: vec![],
                                     template: self.clone(),
@@ -172,7 +171,7 @@ impl Template {
                                     .attrs
                                     .get(&ExpandedName::new("", value.value))
                                     .map(|attr| attr.value.clone())
-                                    .unwrap_or_else(|| "".to_string()),
+                                    .unwrap_or_default(),
                             },
                         );
                     }
@@ -191,7 +190,7 @@ impl Template {
                         })?;
                     let mut scripts = scripts_ref_cloned.borrow_mut();
                     for (name, contents) in new_scripts {
-                        scripts.insert(name.to_string(), Arc::new(RefCell::new(contents)));
+                        scripts.insert(name.to_string(), Rc::new(RefCell::new(contents)));
                     }
                     let mut attrs = HashMap::new();
                     attrs.insert(
@@ -226,7 +225,7 @@ impl Template {
                             ctx.attrs
                                 .get(&ExpandedName::new("", name.as_str()))
                                 .map(|attr| attr.value.clone())
-                                .unwrap_or_else(|| "".to_string())
+                                .unwrap_or_default()
                         } else {
                             "".to_string()
                         }
@@ -294,14 +293,14 @@ impl Template {
             Some(tmpl) => {
                 let attrs = tmpl.as_element().unwrap().attributes.borrow();
                 let (contents, scripts) = self.render_basic(ctx)?;
-                let new_scripts = Arc::new(RefCell::new(HashMap::new()));
+                let new_scripts = Rc::new(RefCell::new(HashMap::new()));
                 for (name, contents) in ctx.scripts.take() {
                     new_scripts.borrow_mut().insert(name, contents);
                 }
                 for (name, contents) in scripts {
                     new_scripts
                         .borrow_mut()
-                        .insert(name, Arc::new(RefCell::new(contents)));
+                        .insert(name, Rc::new(RefCell::new(contents)));
                 }
                 ctx.loader
                     .load(&attrs.get("template").unwrap().to_string())?
