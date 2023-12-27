@@ -14,6 +14,7 @@ use template::TemplateLoader;
 
 #[macro_use]
 extern crate html5ever;
+mod config;
 mod markdown;
 mod server;
 mod template;
@@ -62,7 +63,6 @@ fn copy_assets_recursive(dir: String) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
 fn compile_template(path: PathBuf, loader: &TemplateLoader) -> Result<(), Box<dyn Error>> {
     let template = loader.load(&path.to_string_lossy().to_string())?;
     println!("Building page \x1b[1m{}\x1b[0m", path.to_string_lossy());

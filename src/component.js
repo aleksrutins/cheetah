@@ -1,6 +1,6 @@
 /*
  * component.js
- * part of the Cheetah static site generator (https://Cheetah.farthergate.com)
+ * part of the Cheetah static site generator (https://cheetah.farthergate.com)
  * copyright (C) 2023 Aleks Rūtiņš <aleks@rutins.com> under the MIT License
  */
 
@@ -17,25 +17,25 @@ export function registerComponent(name, template, scripts) {
     }
     connectedCallback() {
       if(this.isConnected) {
-        if(this.shadowRoot == null) { // Not prerendered or no declarative shadow DOM
+        if(this.shadowRoot === null) { // Not prerendered or no declarative shadow DOM
           let mode = 'open';
           let prerendered = false;
           let newTemplate = this.querySelector(":scope > template[shadowroot]");
-          if(newTemplate != null) { // Prerendered, but no declarative shadow DOM
+          if(newTemplate !== null) { // Prerendered, but no declarative shadow DOM
             template = newTemplate.content;
             mode = newTemplate.getAttribute('shadowroot');
             prerendered = true;
           }
           let shadow = this.attachShadow({ mode });
-          shadow.appendChild(template instanceof String? parseFragment(template) : template.cloneNode(true));
+          shadow.appendChild(typeof template === 'string' ? parseFragment(template) : template.content.cloneNode(true));
           if(!prerendered) {
             /**
              * @param {Node} el 
              */
             let parseRecursive = (el) => {
-              if(el.nodeType = el.TEXT_NODE) {
+              if(el.nodeType === el.TEXT_NODE) {
                 el.textContent = el.textContent.replace(/\{\{\s*(\w*)\s*\}\}/g, (_, attr) => this.getAttribute(attr));
-              } else if(el.nodeType == el.ELEMENT_NODE) {
+              } else if(el.nodeType === el.ELEMENT_NODE) {
                 for(let attr of el.attributes) if(attr.name.startsWith('bind')) {
                   attr.value = this.getAttribute(attr.value);
                 }
