@@ -28,20 +28,13 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Rust
-        # You may pin to the exact commit or the version.
-        # uses: ATiltedTree/setup-rust@749afc283f2b846eb90a670e757de9da4da091f7
-        uses: ATiltedTree/setup-rust@v1.0.5
-        with:
-          # The version to install
-          rust-version: 1.66.1
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
+      - uses: actions/checkout@v3
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - uses: actions/configure-pages@v2
       - name: Build Site
         working-directory: 'docs'
-        run: 'cargo run'
+        run: 'nix run "https://flakehub.com/f/aleksrutins/cheetah/*.tar.gz"'
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
