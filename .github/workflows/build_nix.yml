@@ -8,6 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v24
+      - uses: DeterminateSystems/nix-installer-action@v9
       - name: Build package
         run: nix build
