@@ -6,7 +6,6 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
         <link rel="modulepreload" href="/_scripts/component.js">
-        <link rel="modulepreload" href="https://cdn.skypack.dev/@webcomponents/template-shadowroot">
         <link rel="modulepreload" href="/assets/vendor/highlight/es/core.min.js">
         <link rel="modulepreload" href="/assets/vendor/highlight/es/languages/javascript.js">
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -48,13 +47,10 @@
           <slot></slot>
         </div>
         <script type="module">
-          import { hydrateShadowRoots } from "https://cdn.skypack.dev/@webcomponents/template-shadowroot"
           import hljs from "/assets/vendor/highlight/es/core.min.js";
           import javascript from "/assets/vendor/highlight/es/languages/javascript.js";
           import xml from "/assets/vendor/highlight/es/languages/xml.js";
           import css from "/assets/vendor/highlight/es/languages/css.js";
-
-          hydrateShadowRoots(document.body)
 
           hljs.registerLanguage('javascript', javascript)
           hljs.registerLanguage('css', css)

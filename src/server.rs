@@ -1,28 +1,39 @@
 use std::{env, error::Error, fs, path::Path, time::SystemTime};
 
+use indicatif::ProgressBar;
 use notify::{Event, RecursiveMode, Watcher};
 
 use crate::{
-    compile_template, compile_templates_recursive, copy_assets_recursive, template::TemplateLoader,
+    compile_template, compile_templates_recursive,
+    config::{Settings, SETTINGS},
+    copy_assets_recursive,
+    template::TemplateLoader,
 };
 
-pub async fn run() -> Result<(), Box<dyn Error>> {
-    let start_time = SystemTime::now();
-    let loader = TemplateLoader::default();
-
+fn compile_all(loader: &TemplateLoader, progress: &ProgressBar) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all("_build/pages/_scripts")?;
-    compile_templates_recursive("pages".to_string(), &loader)?;
+    compile_templates_recursive("pages".to_string(), loader, progress)?;
 
     fs::write(
         "_build/pages/_scripts/component.js",
         include_str!("component.js"),
     )?;
 
-    copy_assets_recursive("assets".to_string())?;
-    println!(
+    copy_assets_recursive("assets".to_string(), progress)?;
+
+    Ok(())
+}
+
+pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
+    let start_time = SystemTime::now();
+    let loader = TemplateLoader::default();
+
+    compile_all(&loader, &progress)?;
+
+    progress.finish_with_message(format!(
         "Initial build finished in \x1b[1m{}ms\x1b[0m",
         SystemTime::now().duration_since(start_time)?.as_millis()
-    );
+    ));
     println!("Starting watcher.");
 
     let mut watcher = notify::recommended_watcher(move |res: notify::Result<Event>| match res {
@@ -34,30 +45,38 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
 
                     let relative_path =
                         pathdiff::diff_paths(&path, env::current_dir().unwrap()).unwrap();
-                    if relative_path.starts_with("_build/") {
+                    if relative_path.starts_with("_build/") || relative_path.starts_with(".git/") {
                         continue;
                     }
-                    println!("File changed: {:?}", relative_path);
+                    if relative_path == Path::new("hyena.toml") {
+                        let mut settings = SETTINGS.lock().unwrap();
+                        *settings = Settings::new().unwrap();
+                        drop(settings);
+                        compile_all(&loader, &progress)
+                            .map_err(|e| {
+                                println!("Error in compilation: {:?}", e);
+                            })
+                            .ok();
+                    }
                     if relative_path.starts_with("layouts/")
                         || relative_path.starts_with("components/")
                     {
-                        println!("Layout or component changed; recompiling all");
-                        compile_templates_recursive("pages".to_string(), &loader)
+                        compile_templates_recursive("pages".to_string(), &loader, &progress)
                             .map_err(|e| {
                                 println!("Error in compilation: {:?}", e);
                             })
                             .ok();
                     } else if relative_path.starts_with("pages/") {
-                        compile_template(relative_path.to_path_buf(), &loader)
+                        compile_template(relative_path.to_path_buf(), &loader, &progress)
                             .map_err(|e| {
                                 println!("Error in compilation: {:?}", e);
                             })
                             .ok();
                     } else if relative_path.starts_with("assets/") {
-                        println!(
+                        progress.set_message(format!(
                             "Copying asset \x1b[1m{}\x1b[0m",
                             relative_path.to_string_lossy()
-                        );
+                        ));
                         fs::create_dir_all(format!(
                             "_build/pages/{}",
                             relative_path.parent().unwrap().to_string_lossy()
@@ -69,10 +88,13 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
                         )
                         .unwrap();
                     }
-                    println!(
+                    progress.finish_with_message(format!(
                         "Rebuild finished in \x1b[1m{}ms\x1b[0m",
-                        SystemTime::now().duration_since(recompile_start).unwrap().as_millis()
-                    );
+                        SystemTime::now()
+                            .duration_since(recompile_start)
+                            .unwrap()
+                            .as_millis()
+                    ));
                 }
             }
         }

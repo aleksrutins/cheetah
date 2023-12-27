@@ -36,12 +36,16 @@ export function registerComponent(name, template, scripts) {
               if(el.nodeType === el.TEXT_NODE) {
                 el.textContent = el.textContent.replace(/\{\{\s*(\w*)\s*\}\}/g, (_, attr) => this.getAttribute(attr));
               } else if(el.nodeType === el.ELEMENT_NODE) {
-                for(let attr of el.attributes) if(attr.name.startsWith('bind')) {
-                  attr.value = this.getAttribute(attr.value);
+                for(let attr of el.attributes) if(attr.name.startsWith('[') && attr.name.endsWith(']')) {
+                  let name = attr.name.slice(1, attr.name.length - 1);
+                  let value = this.getAttribute(attr.value);
+
+                  el.setAttribute(name, value);
+                  el.removeAttribute(attr.name);
                 }
               }
               for(let child of el.children) {
-                parseRecursive(child);
+                if(child.getRootNode() === shadow) parseRecursive(child);
               }
             };
             parseRecursive(shadow);

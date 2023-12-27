@@ -10,7 +10,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::markdown;
+use crate::{config::SETTINGS, markdown};
 
 #[derive(Clone, Debug)]
 pub struct Template {
@@ -94,6 +94,26 @@ impl Template {
         let scripts_ref_cloned = scripts_ref.clone();
         let bind_regex = Regex::new(r"\{\{(?P<var>.*?)\}\}").unwrap();
         let node = root.deref_mut();
+
+        let settings = SETTINGS.lock().unwrap();
+        if settings.always_hydrate {
+            if let Some(name) = &ctx.component_name {
+                let mut scripts = scripts_ref.borrow_mut();
+
+                let script_name = format!("{}.registrar.js", name);
+                if scripts.get(&script_name).is_none() {
+                    scripts.insert(
+                        script_name.clone(),
+                        Arc::new(RefCell::new(ElementRegistrar {
+                            name: name.to_string(),
+                            connected_scripts: vec![],
+                            template: self.clone(),
+                        })),
+                    );
+                }
+            }
+        }
+        drop(settings);
 
         for mut child in node.children() {
             let registrar = if let NodeData::Element(el) = child.data() {
