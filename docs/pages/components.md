@@ -86,7 +86,7 @@ that your component is hydrated with as `this`.
 
 > **Important note:** If your component has no scripts, by default, it will not be hydrated,
 > and no scripts will be loaded. No need to worry about bloat! However, not all browsers support declarative shadow DOM, so you can
-> set `always_hydrate` to `true` in your [`hyena.toml`](configuration.html) to include a tiny bit of JavaScript (generally, the size of your component plus <100B of support code per component, plus ~2.25kB of shared code) that will render the component if your browser hasn't already. 
+> set `always_hydrate` to `true` in your [`cheetah.toml`](configuration.html) to include a tiny bit of JavaScript (generally, the size of your component plus <100B of support code per component, plus ~2.25kB of shared code) that will render the component if your browser hasn't already. 
 
 To make the counter component shown above, just write vanilla JavaScript:
 
