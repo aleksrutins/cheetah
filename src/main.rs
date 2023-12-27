@@ -6,7 +6,8 @@ use std::{
     fmt::Display,
     fs,
     path::PathBuf,
-    time::{Duration, SystemTime}, rc::Rc,
+    rc::Rc,
+    time::{Duration, SystemTime},
 };
 
 use indicatif::{ProgressBar, ProgressStyle};

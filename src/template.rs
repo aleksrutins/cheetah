@@ -6,7 +6,8 @@ use std::{
     collections::{BTreeMap, HashMap},
     error::Error,
     fs,
-    ops::DerefMut, rc::Rc,
+    ops::DerefMut,
+    rc::Rc,
 };
 
 use crate::{config::SETTINGS, markdown};
