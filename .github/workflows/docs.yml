@@ -34,11 +34,11 @@ jobs:
       - uses: actions/configure-pages@v2
       - name: Build Site
         working-directory: 'docs'
-        run: 'nix run "https://flakehub.com/f/aleksrutins/cheetah/*.tar.gz"'
+        run: 'nix build .#site'
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: './docs/_build/pages'
+          path: './docs/result'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
