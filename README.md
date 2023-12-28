@@ -14,37 +14,33 @@ Here's a simple one to get you started (based on the one used for Cheetah's docs
 ```nix
 {
   inputs = {
+    cheetah.url = "github:aleksrutins/cheetah";
     utils.url = "github:numtide/flake-utils";
-
-    # This pulls the latest tag from FlakeHub; if you want to live on the edge, you can
-    # also use "github:aleksrutins/cheetah", but be warned that it is not necessarily stable.
-    cheetah.url = "https://flakehub.com/f/aleksrutins/cheetah/*.tar.gz";
   };
 
   outputs = { self, utils, cheetah }:
-    utils.lib.eachDefaultSystem (system: {
-      packages.site = (cheetah.buildSite.${system} ./. {
-        name = "site"; # The name of the resulting Nix derivation for the site; this doesn't really matter.
-
-        config = {
-          # Put Cheetah configuration options here; see the website for more details.
-        };
+    let config = {
+      # Pass your configuration options here.
+    };
+    in utils.lib.eachDefaultSystem (system: {
+      packages.default = (cheetah.buildSite.${system} ./. {
+        name = "site";
+        inherit config;
       });
+
+      devShells.default = (cheetah.createDevShell.${system} { inherit config; });
     });
 }
 
 ```
 
-To build your site, just use `nix build .#site` - see <workflows/docs.yml> for an example of how to use this in CI.
+To build your site, just use `nix build .` - see <workflows/docs.yml> for an example of how to use this in CI.
 
 ### Normal Usage
 Alternatively, you can use it as a normal binary.
 
 Either install it as a flake using Nix (recommended):
 ```sh
-# using a tagged release:
-nix profile install 'https://flakehub.com/f/aleksrutins/cheetah/*.tar.gz'
-# or, to live on the edge:
 nix profile install github:aleksrutins/cheetah
 ```
 

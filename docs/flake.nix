@@ -4,14 +4,29 @@
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, utils, cheetah }:
-    utils.lib.eachDefaultSystem (system: {
-      packages.site = (cheetah.buildSite.${system} ./. {
-        name = "cheetah-docs";
+  outputs = { self, nixpkgs, utils, cheetah }:
+    let config = {
+      always_hydrate = true;
+    };
+    in utils.lib.eachDefaultSystem (system: {
+      packages =
+        let pkgs = (import nixpkgs) { inherit system; };
+        in rec {
+          default = (cheetah.buildSite.${system} ./. {
+            name = "cheetah-docs";
+            inherit config;
+          });
 
-        config = {
-          always_hydrate = true;
+          container = cheetah.createContainer.${system} {
+            inherit pkgs;
+            site = default;
+            options = {
+              name = "cheetah-docs";
+              inherit config;
+            };
+          };
         };
-      });
+
+      devShells.default = (cheetah.createDevShell.${system} { inherit config; });
     });
 }

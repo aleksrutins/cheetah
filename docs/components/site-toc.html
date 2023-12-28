@@ -1,7 +1,15 @@
-<nav-link url="/">Home</nav-link>
-<nav-link url="/intro.html">Introduction</nav-link>
+<nav>
+<h1 id="site-title">Cheetah</h1>
+
+<nav-section>Start Here</nav-section>
+<nav-link url="/">Introduction</nav-link>
+<nav-link url="/getting-started.html">Getting Started</nav-link>
+
+<nav-section>Guides</nav-section>
 <nav-link url="/components.html">Components</nav-link>
+<nav-link url="/deployment.html">Deployment</nav-link>
 <nav-link url="/configuration.html">Configuration</nav-link>
+</nav>
 
 <style>
     :host {
@@ -12,8 +20,20 @@
         padding-left: 5%;
         background-color: #f6f6f7;
 
+        box-sizing: border-box;
+
         position: sticky;
         top: 0;
         height: 100vh;
+        min-width: fit-content;
+    }
+
+    nav {
+        padding-right: 1.5em;
+    }
+
+    h1#site-title {
+        border-bottom: 1px solid #aaa;
+        padding: 5px;
     }
 </style>

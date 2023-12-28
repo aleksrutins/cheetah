@@ -2,7 +2,7 @@
 
 # Configuration
 
-You can configure your site using a `cheetah.toml` in your site's root.
+You can configure your site by passing a `config` hash to `cheetah.buildSite` (if using a flake) or using a `cheetah.toml` in your site's root.
 
 ## Available Options
 
