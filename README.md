@@ -1,6 +1,7 @@
 # Cheetah
 
 > A static site generator written in Rust.
+
 [![FlakeHub](https://img.shields.io/endpoint?url=https://flakehub.com/f/aleksrutins/cheetah/badge)](https://flakehub.com/flake/aleksrutins/cheetah)
 
 ## Installation
