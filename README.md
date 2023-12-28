@@ -19,7 +19,7 @@ Here's a simple one to get you started (based on the one used for Cheetah's docs
     # This pulls the latest tag from FlakeHub; if you want to live on the edge, you can
     # also use "github:aleksrutins/cheetah", but be warned that it is not necessarily stable.
     cheetah.url = "https://flakehub.com/f/aleksrutins/cheetah/*.tar.gz";
-  }
+  };
 
   outputs = { self, utils, cheetah }:
     utils.lib.eachDefaultSystem (system: {
