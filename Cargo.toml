@@ -1,8 +1,9 @@
 [package]
 name = "cheetah"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Aleks Rūtiņš <aleks@rutins.com>"]
+license = "MIT"
 license-file = "LICENSE"
 homepage = "https://cheetah.farthergate.com"
 documentation = "https://cheetah.farthergate.com"
