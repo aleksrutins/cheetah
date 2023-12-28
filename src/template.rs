@@ -92,7 +92,8 @@ impl Template {
         ctx: &TemplateContext,
     ) -> Result<(), Box<dyn Error>> {
         let scripts_ref_cloned = scripts_ref.clone();
-        let bind_regex = Regex::new(r"\{\{(?P<var>.*?)\}\}").unwrap();
+        let bind_regex = Regex::new(r"[^\!]\{\{(?P<var>.*?)\}\}").unwrap();
+        let literal_bind_regex = Regex::new(r"\!\{\{").unwrap();
         let node = root.deref_mut();
 
         let settings = SETTINGS.lock().unwrap();
@@ -231,6 +232,9 @@ impl Template {
                             "".to_string()
                         }
                     })
+                    .to_string();
+                *text = literal_bind_regex
+                    .replace_all(&text, "{{")
                     .to_string();
 
                 if let Some(registrar) = registrar {

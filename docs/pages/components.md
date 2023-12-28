@@ -77,7 +77,7 @@ Cheetah uses the magic of [declarative shadow DOM](https://developer.chrome.com/
 to make components work, so styles, scripts, and even IDs
 are scoped to the component.
 
-You can access attributes using the `{{attribute name}}` syntax, and you can render children using the standard [`slot`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot) API.
+You can access attributes using the `{{attribute name}}` syntax (if you want to put in a literal `{{ something }}`, you can escape it by putting a `!` character in front of it), and you can render children using the standard [`slot`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot) API.
 
 Speaking of scripts, to make more complicated components
 (like the counter above), you'll want some JavaScript.
