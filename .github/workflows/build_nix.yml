@@ -13,6 +13,5 @@ jobs:
         with:
           name: aleksrutins
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-          pushFilter: '*cheetah*.drv'
       - name: Build package
         run: nix build
