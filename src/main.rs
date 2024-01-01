@@ -11,6 +11,7 @@ use std::{
 };
 
 use indicatif::{ProgressBar, ProgressStyle};
+use ssr::caddyfile::create_caddyfile;
 use template::TemplateLoader;
 
 #[macro_use]
@@ -18,6 +19,7 @@ extern crate html5ever;
 mod config;
 mod markdown;
 mod server;
+mod ssr;
 mod template;
 
 const BUILD_DIR: &str = "_build";
@@ -170,6 +172,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )?;
 
         copy_assets_recursive("assets".to_string(), &progress)?;
+
+        progress.set_message("Writing Caddyfile");
+        fs::write("_build/pages/Caddyfile", create_caddyfile())?;
 
         progress.finish_with_message(format!(
             "Built in \x1b[1m{}ms\x1b[0m",

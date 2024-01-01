@@ -1,0 +1,15 @@
+name: "Lint & Build"
+
+on:
+  push:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt && cargo clippy
+      - run: cargo build

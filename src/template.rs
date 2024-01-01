@@ -233,9 +233,7 @@ impl Template {
                         }
                     })
                     .to_string();
-                *text = literal_bind_regex
-                    .replace_all(&text, "{{")
-                    .to_string();
+                *text = literal_bind_regex.replace_all(&text, "{{").to_string();
 
                 if let Some(registrar) = registrar {
                     registrar

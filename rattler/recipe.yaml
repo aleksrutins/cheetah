@@ -1,0 +1,25 @@
+context:
+  version: 0.2.1
+
+package:
+  name: cheetah
+  version: ${{ version }}
+
+source:
+  path: ..
+
+build:
+  number: 0
+  script:
+    - cargo build --release
+    - if: unix
+      then:
+      - mkdir -p $PREFIX/bin
+      - mv ./target/release/cheetah $PREFIX/bin/
+    - if: win
+      then:
+      - move target\release\cheetah.exe %PREFIX%\bin\
+
+requirements:
+  build:
+    - rust
