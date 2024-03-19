@@ -92,7 +92,7 @@ impl Template {
         ctx: &TemplateContext,
     ) -> Result<(), Box<dyn Error>> {
         let scripts_ref_cloned = scripts_ref.clone();
-        let bind_regex = Regex::new(r"[^\!]\{\{(?P<var>.*?)\}\}").unwrap();
+        let bind_regex = Regex::new(r"[^\!]?\{\{(?P<var>.*?)\}\}").unwrap();
         let literal_bind_regex = Regex::new(r"\!\{\{").unwrap();
         let node = root.deref_mut();
 
