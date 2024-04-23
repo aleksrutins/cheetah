@@ -48,7 +48,7 @@ pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
                     if relative_path.starts_with("_build/") || relative_path.starts_with(".git/") {
                         continue;
                     }
-                    if relative_path == Path::new("hyena.toml") {
+                    if relative_path == Path::new("cheetah.toml") {
                         let mut settings = SETTINGS.lock().unwrap();
                         *settings = Settings::new().unwrap();
                         drop(settings);

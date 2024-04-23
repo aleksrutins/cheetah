@@ -59,6 +59,6 @@ docker load < result
 This built image can then be pushed to a registry and deployed anywhere. The webserver runs on container port 80.
 
 ### Deploying on Railway
-To deploy a Hyena site on [Railway](https://railway.app), as an example, you can [use a GitHub Action to build a container and publish it to GHCR](https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions), and then you can use Railway's [OCI image deployment](https://docs.railway.app/guides/services#deploying-from-a-docker-image) functionality to deploy it.
+To deploy a Cheetah site on [Railway](https://railway.app), as an example, you can [use a GitHub Action to build a container and publish it to GHCR](https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions), and then you can use Railway's [OCI image deployment](https://docs.railway.app/guides/services#deploying-from-a-docker-image) functionality to deploy it.
 
 If you need help, ping me (@aleks) on the Railway Discord server.
