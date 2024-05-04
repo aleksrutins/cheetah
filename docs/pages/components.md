@@ -1,4 +1,4 @@
-<extends template="layouts/index.html"></extends>
+<extends template="layouts/index.html" pagetitle="Components"></extends>
 
 <style>
     div.component-sidebyside {

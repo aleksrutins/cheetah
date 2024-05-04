@@ -1,4 +1,4 @@
-<extends template="layouts/index.html"></extends>
+<extends template="layouts/index.html" pagetitle="Deployment"></extends>
 
 # Deployment
 

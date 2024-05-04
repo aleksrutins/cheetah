@@ -1,4 +1,4 @@
-<extends template="layouts/index.html"></extends>
+<extends template="layouts/index.html" pagetitle="Getting Started"></extends>
 
 # Getting Started
 
