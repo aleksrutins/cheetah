@@ -19,6 +19,7 @@ mod config;
 mod markdown;
 mod server;
 mod template;
+mod bindings;
 
 const BUILD_DIR: &str = "_build";
 

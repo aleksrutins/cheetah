@@ -1,5 +1,6 @@
 use html5ever::{local_name, ns, QualName};
 use kuchiki::{traits::*, Attribute, ExpandedName, NodeData, NodeRef};
+use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use std::{
     cell::RefCell,
@@ -10,7 +11,7 @@ use std::{
     rc::Rc,
 };
 
-use crate::{config::SETTINGS, markdown};
+use crate::{bindings::BindingContext, config::SETTINGS, markdown};
 
 #[derive(Clone, Debug)]
 pub struct Template {
@@ -92,8 +93,6 @@ impl Template {
         ctx: &TemplateContext,
     ) -> Result<(), Box<dyn Error>> {
         let scripts_ref_cloned = scripts_ref.clone();
-        let bind_regex = Regex::new(r"[^\!]?\{\{(?P<var>.*?)\}\}").unwrap();
-        let literal_bind_regex = Regex::new(r"\!\{\{").unwrap();
         let node = root.deref_mut();
 
         let settings = SETTINGS.lock().unwrap();
@@ -152,33 +151,11 @@ impl Template {
             self.expand_tree_recursive(&mut child, scripts_ref, registrar, ctx)?;
         }
 
+        let binding = BindingContext::new(node.data(), ctx);
         match node.data() {
             NodeData::Element(el) => {
-                let mut attrs = el.attributes.borrow_mut();
-                for (name, value) in attrs.map.clone() {
-                    if name.local.starts_with('[') && name.local.ends_with(']') {
-                        attrs.map.insert(
-                            ExpandedName::new(
-                                "",
-                                name.local
-                                    .clone()
-                                    .strip_prefix('[')
-                                    .unwrap()
-                                    .strip_suffix(']')
-                                    .unwrap(),
-                            ),
-                            Attribute {
-                                prefix: None,
-                                value: ctx
-                                    .attrs
-                                    .get(&ExpandedName::new("", value.value))
-                                    .map(|attr| attr.value.clone())
-                                    .unwrap_or_default(),
-                            },
-                        );
-                    }
-                }
-                drop(attrs);
+                binding.expand_attributes();
+
                 if el.name.local.to_string().contains('-') {
                     let (rendered_contents, new_scripts) = ctx
                         .loader
@@ -220,28 +197,13 @@ impl Template {
                 }
             }
             NodeData::Text(text_ref) => {
-                let mut text = text_ref.borrow_mut();
-                *text = bind_regex
-                    .replace_all(&text, |caps: &Captures| {
-                        if let Some(name) = caps.get(1) {
-                            ctx.attrs
-                                .get(&ExpandedName::new("", name.as_str()))
-                                .map(|attr| attr.value.clone())
-                                .unwrap_or_default()
-                        } else {
-                            "".to_string()
-                        }
-                    })
-                    .to_string();
-                *text = literal_bind_regex
-                    .replace_all(&text, "{{")
-                    .to_string();
+                binding.expand_text();
 
                 if let Some(registrar) = registrar {
                     registrar
                         .borrow_mut()
                         .connected_scripts
-                        .push(text.to_string());
+                        .push(text_ref.borrow().to_string());
                     node.detach();
                 };
             }
@@ -296,6 +258,8 @@ impl Template {
     ) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
         match &self.extends {
             Some(tmpl) => {
+                BindingContext::new(tmpl.data(), ctx).expand_attributes();
+
                 let attrs = tmpl.as_element().unwrap().attributes.borrow();
                 let (contents, scripts) = self.render_basic(ctx)?;
                 let new_scripts = Rc::new(RefCell::new(HashMap::new()));
