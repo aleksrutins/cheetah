@@ -170,6 +170,7 @@ dependencies = [
  "serde",
  "tokio",
  "warp",
+ "wasmer-runtime",
 ]
 
 [[package]]
@@ -2253,6 +2254,12 @@ name = "wasi"
 version = "0.11.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
+
+[[package]]
+name = "wasmer-runtime"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "444e0e5ad17ca773142afa9a94a9aae00026f19d9ac5a0e6dc25c893e134db19"
 
 [[package]]
 name = "winapi"
