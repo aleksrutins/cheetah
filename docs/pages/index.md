@@ -57,14 +57,10 @@ To build your site, just use `nix build .` - see `workflows/docs.yml` [on GitHub
 ### Normal Usage
 Alternatively, you can use it as a normal binary.
 
-Either install it as a flake using Nix (recommended):
-```sh
-nix profile install github:aleksrutins/cheetah
-```
-
-Or install it from [Cargo](https://crates.io/crates/cheetah):
-```sh
-cargo install cheetah
-```
+| Repository | Package |
+|------------|---------|
+| Nix Flakes | `github:aleksrutins/cheetah` |
+| [AUR](https://aur.archlinux.org/packages/cheetah) | `cheetah` |
+| [Crates.io](https://crates.io/crates/cheetah) | `cheetah` |
 
 Now, move on to [Getting Started](/getting-started.html).
