@@ -1,0 +1,18 @@
+context:
+    version: 0.2.3
+    name: cheetah
+
+package:
+    name: "{{ name }}"
+    version: "{{ version }}"
+
+source:
+    path: ..
+
+build:
+    number: 1
+    script: cargo build --release --locked && mkdir -p $PREFIX/bin && cp target/release/{{ name }} $PREFIX/bin
+
+requirements:
+    host:
+        - rust
