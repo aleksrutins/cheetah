@@ -13,7 +13,6 @@ publish api_key:
 
 build-and-publish:
     #!/usr/bin/env bash
-    cd cheetah
     if ../cicada/cicada commit '[publish]'; then
       for target in linux-64 linux-aarch64 win-64 win-arm64; do
         just package $target

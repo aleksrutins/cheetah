@@ -3,6 +3,7 @@ packages:
   - hut
   - pixi
   - just
+  - rattler-build
 
 secrets:
   - 49004ca8-1e5d-4c1f-a3fe-9c34c7f41fea
@@ -19,6 +20,7 @@ sources:
 tasks:
   # TODO: macOS builds broken for the moment
   - publish-package: |
+      cd cheetah
       just build-and-publish
   - build-docs: |
       cd cheetah/docs
