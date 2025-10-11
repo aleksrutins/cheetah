@@ -3,17 +3,33 @@ packages:
   - hut
   - pixi
 
+secrets:
+  - 49004ca8-1e5d-4c1f-a3fe-9c34c7f41fea
+
 oauth: pages.sr.ht/PAGES:RW
 environment:
   site: cheetah.farthergate.com
+  CONDA_BUILD_WINSDK: ~/winsdk
+
+sources:
+  - https://git.sr.ht/~aleksrutins/cheetah
+  - https://git.sr.ht/~aleksrutins/cicada
 
 tasks:
-  - build: |
+  - build-docs: |
       cd cheetah/docs
       pixi i
       pixi run build
-  - package: |
+  - package-docs: |
       cd cheetah/docs/_build/pages
       tar -cvz . > ../../../../site.tar.gz
-  - upload: |
+  - upload-docs: |
       hut pages publish -d $site site.tar.gz
+  # TODO: macOS builds broken for the moment
+  - publish-package: |
+      if ./cicada/cicada commit '[publish]'; then
+        for target in (linux-64 linux-aarch64 win-64 win-arm64); do
+          just package $target
+        done
+        just publish $(cat ~/.prefix_key)
+      fi
