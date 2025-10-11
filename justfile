@@ -13,8 +13,8 @@ publish api_key:
 
 build-and-publish:
     #!/usr/bin/env bash
-    if ../cicada/cicada commit '[publish]'; then
-      for target in linux-64 linux-aarch64 win-64 win-arm64; do
+    if ../cicada/cicada commit '\[publish\]'; then
+      for target in linux-64 linux-aarch64 win-64; do
         just package $target
       done
       just publish $(cat ~/.prefix_key)
