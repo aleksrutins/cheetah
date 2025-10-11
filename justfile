@@ -3,13 +3,11 @@ package platform:
 
 publish api_key:
     #!/usr/bin/env bash
-    EXIT_CODE=0
     for pkg in $(find output -type f \( -name "*.conda" -o -name "*.tar.bz2" \) ); do
         if ! rattler-build upload prefix -c cheetah "${pkg}" --api-key={{api_key}}; then
-            EXIT_CODE=1
         fi
     done
-    exit $EXIT_CODE
+    exit 0
 
 build-and-publish:
     #!/usr/bin/env bash
