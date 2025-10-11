@@ -1,8 +1,11 @@
-image: fedora/42
+image: nixos/unstable
 packages:
-  - curl
-  - hut
-  - pixi
+  - nixpkgs.hut
+  - nixpkgs.pixi
+
+repositories:
+  nixpkgs: https://nixos.org/channels/nixpkgs-unstable
+
 oauth: pages.sr.ht/PAGES:RW
 environment:
   site: cheetah.farthergate.com
