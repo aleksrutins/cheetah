@@ -16,6 +16,15 @@ sources:
   - https://git.sr.ht/~aleksrutins/cicada
 
 tasks:
+  # TODO: macOS builds broken for the moment
+  - publish-package: |
+      if ./cicada/cicada commit '[publish]'; then
+        cd cheetah
+        for target in linux-64 linux-aarch64 win-64 win-arm64; do
+          just package $target
+        done
+        just publish $(cat ~/.prefix_key)
+      fi
   - build-docs: |
       cd cheetah/docs
       pixi i
@@ -25,11 +34,3 @@ tasks:
       tar -cvz . > ../../../../site.tar.gz
   - upload-docs: |
       hut pages publish -d $site site.tar.gz
-  # TODO: macOS builds broken for the moment
-  - publish-package: |
-      if ./cicada/cicada commit '[publish]'; then
-        for target in (linux-64 linux-aarch64 win-64 win-arm64); do
-          just package $target
-        done
-        just publish $(cat ~/.prefix_key)
-      fi
