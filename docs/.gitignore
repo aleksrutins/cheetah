@@ -1,2 +1,4 @@
 _build/
-cheetah.toml
+cheetah.toml# pixi environments
+.pixi/*
+!.pixi/config.toml

@@ -1,0 +1,16 @@
+image: alpine/edge
+packages:
+  - pixi
+  - hut
+oauth: pages.sr.ht/PAGES:RW
+environment:
+  site: cheetah.farthergate.com
+tasks:
+  - build: |
+      cd cheetah/docs
+      pixi run build
+  - package: |
+      cd cheetah/docs/_build
+      tar -cvz . > ../../../site.tar.gz
+  - upload: |
+      hut pages publish -d $site site.tar.gz

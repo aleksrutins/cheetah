@@ -1,18 +1,33 @@
 context:
-    version: 0.2.3
-    name: cheetah
+  version: 0.2.3
+  name: cheetah
 
 package:
-    name: "{{ name }}"
-    version: "{{ version }}"
+  name: ${{ name }}
+  version: ${{ version }}
 
 source:
-    path: ..
+  path: ..
 
 build:
-    number: 1
-    script: cargo build --release --locked && mkdir -p $PREFIX/bin && cp target/release/{{ name }} $PREFIX/bin
+  script:
+    - cargo-bundle-licenses --format yaml --output ${SRC_DIR}/THIRDPARTY.yml # !(1)
+    - $BUILD_PREFIX/bin/cargo install --locked --bins --root ${PREFIX} --path .
 
 requirements:
-    host:
-        - rust
+  build:
+    - ${{ compiler('rust') }}
+    - cargo-bundle-licenses
+
+tests:
+  - script:
+      - cargo test
+
+about:
+  homepage: https://cheetah.farthergate.com
+  license: MIT
+  license_file:
+    - LICENSE
+    - THIRDPARTY.yml
+  description: "A fast static site generator."
+  summary: "A fast static site generator."

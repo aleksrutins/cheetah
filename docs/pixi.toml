@@ -1,0 +1,13 @@
+[workspace]
+authors = ["Aleks Rutins <keeper@farthergate.com>"]
+channels = ["conda-forge", "https://prefix.dev/cheetah"]
+name = "docs"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+build = "cheetah"
+dev = "cheetah dev"
+
+[dependencies]
+cheetah = ">=0.2.3,<0.3"
