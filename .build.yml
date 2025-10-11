@@ -13,7 +13,7 @@ tasks:
       pixi i
       pixi run build
   - package: |
-      cd cheetah/docs/_build
-      tar -cvz . > ../../../site.tar.gz
+      cd cheetah/docs/_build/pages
+      tar -cvz . > ../../../../site.tar.gz
   - upload: |
       hut pages publish -d $site site.tar.gz
