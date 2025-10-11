@@ -1,14 +1,12 @@
-image: nixos/unstable
+image: archlinux
 packages:
-  - nixpkgs.hut
-  - nixpkgs.pixi
-
-repositories:
-  nixpkgs: https://nixos.org/channels/nixpkgs-unstable
+  - hut
+  - pixi
 
 oauth: pages.sr.ht/PAGES:RW
 environment:
   site: cheetah.farthergate.com
+
 tasks:
   - build: |
       cd cheetah/docs
