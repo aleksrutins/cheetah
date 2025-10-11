@@ -1,15 +1,12 @@
-image: alpine/edge
+image: fedora/42
 packages:
   - curl
   - hut
+  - pixi
 oauth: pages.sr.ht/PAGES:RW
 environment:
   site: cheetah.farthergate.com
 tasks:
-  - pixi: |
-      curl -fsSL https://pixi.sh/install.sh | sh
-      echo >> ~/.profile
-      echo 'export PATH=$HOME/.pixi/bin:$PATH' >> ~/.profile
   - build: |
       cd cheetah/docs
       pixi i
