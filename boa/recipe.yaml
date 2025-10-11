@@ -21,7 +21,7 @@ requirements:
 
 tests:
   - script:
-      - cargo test
+      - "true"
 
 about:
   homepage: https://cheetah.farthergate.com

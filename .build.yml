@@ -11,13 +11,15 @@ secrets:
 oauth: pages.sr.ht/PAGES:RW
 environment:
   site: cheetah.farthergate.com
-  CONDA_BUILD_WINSDK: ~/winsdk
+  CONDA_BUILD_WINSDK: /home/build/winsdk
 
 sources:
   - https://git.sr.ht/~aleksrutins/cheetah
   - https://git.sr.ht/~aleksrutins/cicada
 
 tasks:
+  - winsdk: |
+      mkdir $CONDA_BUILD_WINSDK
   # TODO: macOS builds broken for the moment
   - publish-package: |
       cd cheetah
