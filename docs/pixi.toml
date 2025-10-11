@@ -1,4 +1,4 @@
-[workspace]
+[project]
 authors = ["Aleks Rutins <keeper@farthergate.com>"]
 channels = ["conda-forge", "https://prefix.dev/cheetah"]
 name = "docs"
