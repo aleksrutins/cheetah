@@ -10,7 +10,7 @@ tasks:
       curl -fsSL https://pixi.sh/install.sh | sh
   - build: |
       cd cheetah/docs
-      pixi run build
+      ~/.pixi/bin/pixi run build
   - package: |
       cd cheetah/docs/_build
       tar -cvz . > ../../../site.tar.gz
