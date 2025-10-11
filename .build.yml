@@ -2,6 +2,7 @@ image: archlinux
 packages:
   - hut
   - pixi
+  - just
 
 secrets:
   - 49004ca8-1e5d-4c1f-a3fe-9c34c7f41fea
