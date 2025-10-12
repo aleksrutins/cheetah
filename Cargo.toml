@@ -1,13 +1,13 @@
 [package]
 name = "cheetah"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 authors = ["Aleks Rūtiņš <aleks@rutins.com>"]
 license = "MIT"
 license-file = "LICENSE"
 homepage = "https://cheetah.farthergate.com"
 documentation = "https://cheetah.farthergate.com"
-repository = "https://github.com/aleksrutins/cheetah"
+repository = "https://git.sr.ht/~aleksrutins/cheetah"
 readme = "README.md"
 description = "An extremely fast and flexible static site generator."
 
