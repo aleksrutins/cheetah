@@ -5,7 +5,7 @@ packages:
   - just
 
 secrets:
-  - 49004ca8-1e5d-4c1f-a3fe-9c34c7f41fea
+  - 45a77966-954e-422e-b388-56e1d0d54ffb
 
 oauth: pages.sr.ht/PAGES:RW
 environment:
