@@ -17,6 +17,7 @@ use template::TemplateLoader;
 extern crate html5ever;
 mod bindings;
 mod config;
+mod hooks;
 mod markdown;
 mod server;
 mod template;
@@ -163,6 +164,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let loader = TemplateLoader::default();
 
         fs::create_dir_all("_build/pages/_scripts")?;
+
+        hooks::run_all(&progress, false, None, hooks::During::PreBuild).await?;
+
         compile_templates_recursive("pages".to_string(), &loader, &progress)?;
 
         fs::write(
@@ -171,6 +175,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )?;
 
         copy_assets_recursive("assets".to_string(), &progress)?;
+
+        hooks::run_all(&progress, false, None, hooks::During::PostBuild).await?;
 
         progress.finish_with_message(format!(
             "Built in \x1b[1m{}ms\x1b[0m",

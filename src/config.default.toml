@@ -1,1 +1,2 @@
 always_hydrate = false
+hooks = {}

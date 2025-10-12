@@ -15,7 +15,8 @@
         background-color: #f6f6f7;
     }
 
-    button, span {
+    button,
+    span {
         display: block;
         text-align: center;
         width: 100%;
@@ -49,6 +50,12 @@
 
     const count = this.shadowRoot.querySelector("#count");
 
-    increment.addEventListener('click', () => count.textContent = parseInt(count.textContent) + 1);
-    decrement.addEventListener('click', () => count.textContent = parseInt(count.textContent) - 1);
+    increment.addEventListener(
+        "click",
+        () => (count.textContent = parseInt(count.textContent) + 1),
+    );
+    decrement.addEventListener(
+        "click",
+        () => (count.textContent = parseInt(count.textContent) - 1),
+    );
 </script>

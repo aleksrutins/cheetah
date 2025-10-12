@@ -1,0 +1,5 @@
+[[hooks]]
+name = "test"
+during = "PostBuild"
+dev = {Watch = ["**/*.md"]}
+command = "echo test"
