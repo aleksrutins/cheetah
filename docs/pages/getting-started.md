@@ -43,17 +43,19 @@ This is a page.
 ```
 The `<extends>` tag tells Cheetah to plug the rendered page into our `layouts/index.html` template that we just created. Template paths are relative to the root of the project.
 
-Now, let's try the dev server. If you chose to build your site as a flake, you're going to want to be in the dev shell for this (if you're not sure, go re-read the [introduction](/)):
+Now, let's try the dev server:
 
 ```sh
 cheetah dev
 ```
 
+> **Use Pixi!** If you're using Conda, try [Pixi](https://pixi.sh) and put this in a `dev` script &mdash; that'll allow you to run `pixi run dev` without worrying about activating the environment.
+
 Now, open your browser to `localhost:3000`, and you should see about what you would expect.
 
 ## Adding Interactivity
 
-What sets Cheetah apart from Zola, Hugo, or other static site generators (excluding Astro; Astro is in a class of its own, and you should absolutely use it for larger projects) is its support for prerendered interactive components. These components are pure vanilla JavaScript, and don't depend on any bloated UI libraries, making them extremely lightweight. To make one, just create an HTML file in `components`; for instance, a component at `components/x-counter.html` could be rendered as `<x-counter></x-counter>` in any other template in your site. 
+What sets Cheetah apart from Zola, Hugo, or other static site generators (excluding Astro; Astro is in a class of its own, and you should absolutely use it for larger projects) is its support for prerendered interactive components. These components are pure vanilla JavaScript, and don't depend on any bloated UI libraries, making them extremely lightweight. To make one, just create an HTML file in `components`; for instance, a component at `components/x-counter.html` could be rendered as `<x-counter></x-counter>` in any other template in your site.
 
 Let's add a simple button to greet the user. Make a `components/x-greeter.html` file:
 

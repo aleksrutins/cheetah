@@ -6,12 +6,12 @@ environments:
     - url: https://prefix.dev/cheetah/
     packages:
       linux-64:
-      - conda: https://prefix.dev/cheetah/linux-64/cheetah-0.2.3-hb0f4dca_0.conda
+      - conda: https://prefix.dev/cheetah/linux-64/cheetah-0.2.4-hbf21a9e_0.conda
 packages:
-- conda: https://prefix.dev/cheetah/linux-64/cheetah-0.2.3-hb0f4dca_0.conda
-  sha256: 90628841f119bc336893b3e7c295e9e6fca24f75304ab5d3e7c967a79b8bbc0f
+- conda: https://prefix.dev/cheetah/linux-64/cheetah-0.2.4-hbf21a9e_0.conda
+  sha256: 90874f8ab3ecbd42fa2494ea8f921140319866675c97d455f08dcda4317b9f8b
   constrains:
   - __glibc >=2.17
   license: MIT
-  size: 2501958
-  timestamp: 1760205573275
+  size: 2473260
+  timestamp: 1760231654631

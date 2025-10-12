@@ -4,6 +4,51 @@
 
 > **Note:** This guide assumes that you've configured your site as a flake.
 
+## Managing your site with Pixi
+Managing your site with Pixi is an easy way to make sure you have everything you need to build it. Here's a starter `pixi.toml`, based on the one used to build this documentation:
+```ini
+[workspace]
+authors = ["John Doe <doej@company.corp>"]
+channels = ["conda-forge", "https://prefix.dev/cheetah"]
+name = "site"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+build = "cheetah"
+dev = "cheetah dev"
+
+[dependencies]
+cheetah = ">=0.2.3,<0.3"
+```
+
+## On SourceHut Pages
+Here's a sample `.build.yml` for SourceHut Builds to deploy to Pages:
+```yml
+image: archlinux
+packages:
+  - hut
+  - pixi
+
+oauth: pages.sr.ht/PAGES:RW
+environment:
+  repo: mysite
+  site: my.site.com
+
+tasks:
+  - build: |
+      cd $repo
+      # If your project is managed with Pixi, replace this with `pixi run dev`.
+      pixi x -c https://prefix.dev/cheetah cheetah
+  - package: |
+      cd $repo/_build/pages
+      tar -cvz . > ../../../site.tar.gz
+  - upload: |
+      hut pages publish -d $site site.tar.gz
+```
+
+> *Huh? Isn't it on the AUR? Why are you installing it from Pixi, even on Arch?* On Linux, the Prefix.dev repository provides prebuilt packages - installing from the AUR requires building Cheetah from source, which can take several minutes and a decent bit of CPU. If at all possible, use the Conda package.
+
 ## On GitHub Pages
 To deploy your site on GitHub Pages, set your settings to deploy from an Action and tweak this workflow to your liking:
 
@@ -31,12 +76,17 @@ jobs:
       url: $!{{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: DeterminateSystems/nix-installer-action@v9
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
-      - uses: actions/configure-pages@v2
-      - name: Build Site
-        run: 'nix build .'
+      - uses: prefix-dev/setup-pixi@v0.9.1
+        with:
+          pixi-version: v0.49.0
+
+          cache: true
+          auth-host: prefix.dev
+          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
+
+      # Replace the next line with just `pixi run build` if you've set up a Pixi configuration
+      - run: pixi x -c https://prefix.dev/cheetah cheetah
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
@@ -45,20 +95,3 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v1
 ```
-
-## In a Container
-The [starting flake configuration](/) contains a `container` output. This uses [Packsnap](https://github.com/aleksrutins/packsnap)'s custom plan builder to build a very small container with only your site and the [Caddy](https://caddyserver.com/) web server. To build it and make Docker aware of it, just run:
-
-```sh
-nix build '.#container'
-docker load < result
-```
-
-> **Note:** The image will only work if built on Linux.
-
-This built image can then be pushed to a registry and deployed anywhere. The webserver runs on container port 80.
-
-### Deploying on Railway
-To deploy a Cheetah site on [Railway](https://railway.app), as an example, you can [use a GitHub Action to build a container and publish it to GHCR](https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions), and then you can use Railway's [OCI image deployment](https://docs.railway.app/guides/services#deploying-from-a-docker-image) functionality to deploy it.
-
-If you need help, ping me (@aleks) on the Railway Discord server.

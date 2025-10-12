@@ -74,7 +74,7 @@
         <div id="page-content">
             <slot></slot>
         </div>
-        <script type="module">
+        <script type="module" defer async>
             import hljs from "/assets/vendor/highlight/es/core.min.js";
             import javascript from "/assets/vendor/highlight/es/languages/javascript.min.js";
             import markdown from "/assets/vendor/highlight/es/languages/markdown.min.js";
@@ -83,6 +83,7 @@
             import nix from "/assets/vendor/highlight/es/languages/nix.min.js";
             import bash from "/assets/vendor/highlight/es/languages/bash.min.js";
             import yaml from "/assets/vendor/highlight/es/languages/yaml.min.js";
+            import ini from "/assets/vendor/highlight/es/languages/ini.min.js";
 
             hljs.registerLanguage("javascript", javascript);
             hljs.registerLanguage("markdown", markdown);
@@ -92,6 +93,7 @@
             hljs.registerLanguage("nix", nix);
             hljs.registerLanguage("sh", bash);
             hljs.registerLanguage("yml", yaml);
+            hljs.registerLanguage("ini", ini);
             hljs.highlightAll();
         </script>
     </body>
