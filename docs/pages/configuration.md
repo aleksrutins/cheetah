@@ -7,3 +7,4 @@ You can configure your site by passing a `config` hash to `cheetah.buildSite` (i
 ## Available Options
 
 - `always_hydrate` - Always include JavaScript to hydrate every component, interactive or not. See [Components](/components.html) for more details.
+- `hooks` - A list of [hooks](/hooks.html).
