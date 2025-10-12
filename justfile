@@ -1,11 +1,11 @@
 package platform:
-    pixi build -t {{platform}}
+    pixi build -t {{platform}} -o output/{{platform}}
 
 publish api_key:
     #!/usr/bin/env bash
     pixi auth login repo.prefix.dev --token {{api_key}}
-    for pkg in *.conda; do
-        pixi upload https://prefix.dev/api/v1/upload/cheetah "${pkg}"
+    for pkg in $(find output -type f \( -name "*.conda" -o -name "*.tar.bz2" \) ); do
+        pixi upload https://prefix.dev/api/v1/upload/cheetah "${pkg}" || true
     done
     exit 0
 
