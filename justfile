@@ -1,10 +1,11 @@
 package platform:
-    rattler-build build -r boa --target-platform {{platform}}
+    pixi build -t {{platform}}
 
 publish api_key:
     #!/usr/bin/env bash
-    for pkg in $(find output -type f \( -name "*.conda" -o -name "*.tar.bz2" \) ); do
-        if ! rattler-build upload prefix -c cheetah "${pkg}" --api-key={{api_key}}; then
+    pixi auth login repo.prefix.dev --token {{api_key}}
+    for pkg in *.conda; do
+        if ! pixi upload https://prefix.dev/api/v1/upload/cheetah "${pkg}"; then
         fi
     done
     exit 0

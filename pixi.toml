@@ -1,0 +1,19 @@
+[workspace]
+authors = ["Aleks Rutins <keeper@farthergate.com>"]
+channels = ["conda-forge"]
+name = "cheetah"
+platforms = ["linux-64", "linux-aarch64", "win-64"]
+preview = ["pixi-build"]
+
+
+[package]
+
+
+name = "cheetah"
+version = "0.2.3"
+
+[package.build]
+backend = { name = "pixi-build-rust", version = "*" }
+
+[dependencies]
+cheetah = { path = "." }
