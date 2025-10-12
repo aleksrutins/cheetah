@@ -47,18 +47,19 @@ pub async fn run_all(
 ) -> Result<(), Box<dyn Error>> {
     for hook in &SETTINGS.lock()?.hooks {
         let run_in_dev = !dev
-            || if let Some(path) = &file_changed_path {
-                if let Dev::Watch(globs) = &hook.dev {
-                    globs
-                        .iter()
-                        .map(|glob| Glob::new(glob).map(|it| it.is_match(path.as_path())))
-                        .any(|r| matches!(r, Ok(true)))
+            || (hook.dev != Dev::Disabled
+                && if let Some(path) = &file_changed_path {
+                    if let Dev::Watch(globs) = &hook.dev {
+                        globs
+                            .iter()
+                            .map(|glob| Glob::new(glob).map(|it| it.is_match(path.as_path())))
+                            .any(|r| matches!(r, Ok(true)))
+                    } else {
+                        true
+                    }
                 } else {
                     true
-                }
-            } else {
-                true
-            };
+                });
         if run_in_dev && hook.during == at {
             run_hook(hook, progress).await?;
         }

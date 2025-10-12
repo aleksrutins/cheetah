@@ -3,3 +3,9 @@ name = "test"
 during = "PostBuild"
 dev = {Watch = ["**/*.md"]}
 command = "echo test"
+
+[[hooks]]
+name = "test-build"
+during = "PreBuild"
+dev = "Disabled"
+command = "echo hello world"
