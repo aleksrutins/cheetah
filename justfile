@@ -5,8 +5,7 @@ publish api_key:
     #!/usr/bin/env bash
     pixi auth login repo.prefix.dev --token {{api_key}}
     for pkg in *.conda; do
-        if ! pixi upload https://prefix.dev/api/v1/upload/cheetah "${pkg}"; then
-        fi
+        pixi upload https://prefix.dev/api/v1/upload/cheetah "${pkg}"
     done
     exit 0
 
