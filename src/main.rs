@@ -15,11 +15,11 @@ use template::TemplateLoader;
 
 #[macro_use]
 extern crate html5ever;
+mod bindings;
 mod config;
 mod markdown;
 mod server;
 mod template;
-mod bindings;
 
 const BUILD_DIR: &str = "_build";
 
@@ -152,7 +152,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     progress.set_style(
         ProgressStyle::with_template("{spinner:.green} {msg}")
             .unwrap()
-            .tick_strings(&["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷", ""]),
+            .tick_strings(&["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷", "✓"]),
     );
 
     let args: Vec<String> = env::args().collect();
