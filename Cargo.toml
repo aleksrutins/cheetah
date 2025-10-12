@@ -1,6 +1,6 @@
 [package]
 name = "cheetah"
-version = "0.2.4"
+version = "0.3.0"
 edition = "2021"
 authors = ["Aleks Rūtiņš <aleks@rutins.com>"]
 license = "MIT"
