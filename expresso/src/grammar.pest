@@ -1,16 +1,17 @@
 // Adapted from https://pest.rs/book/examples/json.html
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
-ident      = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
-parameters =  { value ~ ("," ~ WHITESPACE? ~ value)* }
-fn_call    = ${ ident ~ "(" ~ parameters? ~ ")" }
+ident      = @{ (ASCII_ALPHA | "$" | "_") ~ (ASCII_ALPHANUMERIC | "$" | "_" | "-")* }
+splat      =  { "..." ~ value }
+parameters =  { value ~ ("," ~ WHITESPACE* ~ value)* }
+fn_call    = ${ ident ~ "(" ~ (splat | parameters)? ~ ")" }
 object     =  {
-    "{" ~ "}"
-  | "{" ~ pair ~ ("," ~ pair)* ~ "}"
+    "{" ~ WHITESPACE* ~ "}"
+  | "{" ~ WHITESPACE* ~ pair ~ (WHITESPACE* ~ "," ~ WHITESPACE* ~ pair)* ~ WHITESPACE* ~ "}"
 }
-pair       =  { string ~ WHITESPACE? ~ ":" ~ WHITESPACE? ~ value }
+pair       =  { string ~ WHITESPACE* ~ ":" ~ WHITESPACE* ~ value }
 array      =  {
-    "[" ~ "]"
-  | "[" ~ value ~ ("," ~ value)* ~ "]"
+    "[" ~ WHITESPACE* ~ "]"
+  | "[" ~ WHITESPACE* ~ value ~ (WHITESPACE* ~ "," ~ WHITESPACE* ~ value)* ~ WHITESPACE* ~ "]"
 }
 string     = ${ "\"" ~ inner ~ "\"" }
 inner      = @{ char* }
@@ -24,5 +25,6 @@ null       =  { "null" }
 number     = @{
     "-"? ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
 }
-value      = _{ fn_call | boolean | null | ident | string | object | array | number }
+quote      =  { "'" ~ value }
+value      = _{ fn_call | boolean | null | ident | string | object | array | number | quote }
 expr       = _{ SOI ~ value ~ EOI }
