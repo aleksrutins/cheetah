@@ -1,5 +1,5 @@
-use notify::event::AccessKind;
 use notify::EventKind;
+use notify::event::AccessKind;
 use std::{env, error::Error, fs, path::Path, time::SystemTime};
 
 use indicatif::ProgressBar;
@@ -7,7 +7,7 @@ use notify::{Event, RecursiveMode, Watcher};
 
 use crate::{
     compile_template, compile_templates_recursive,
-    config::{Settings, SETTINGS},
+    config::{SETTINGS, Settings},
     copy_assets_recursive, hooks,
     template::TemplateLoader,
 };
@@ -18,7 +18,7 @@ async fn compile_all(
 ) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all("_build/pages/_scripts")?;
 
-    hooks::run_all(&progress, true, None, hooks::During::PreBuild).await?;
+    hooks::run_all(progress, true, None, hooks::During::PreBuild).await?;
 
     compile_templates_recursive("pages".to_string(), loader, progress)?;
 
@@ -29,7 +29,7 @@ async fn compile_all(
 
     copy_assets_recursive("assets".to_string(), progress)?;
 
-    hooks::run_all(&progress, true, None, hooks::During::PostBuild).await?;
+    hooks::run_all(progress, true, None, hooks::During::PostBuild).await?;
 
     Ok(())
 }
@@ -67,11 +67,11 @@ pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
                         .enable_all()
                         .build()
                         .map_err(|e| {
-                            println!("Error in compilation: {:?}", e);
+                            println!("Error in compilation: {e:?}");
                         })
                         .ok();
 
-                    if let None = rto {
+                    if rto.is_none() {
                         return;
                     }
 
@@ -83,7 +83,7 @@ pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
                         hooks::During::PreBuild,
                     ))
                     .map_err(|e| {
-                        println!("Error in compilation: {:?}", e);
+                        println!("Error in compilation: {e:?}");
                     })
                     .ok();
 
@@ -93,7 +93,7 @@ pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
                         drop(settings);
                         rt.block_on(compile_all(&loader, &progress))
                             .map_err(|e| {
-                                println!("Error in compilation: {:?}", e);
+                                println!("Error in compilation: {e:?}");
                             })
                             .ok();
                     }
@@ -102,13 +102,13 @@ pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
                     {
                         compile_templates_recursive("pages".to_string(), &loader, &progress)
                             .map_err(|e| {
-                                println!("Error in compilation: {:?}", e);
+                                println!("Error in compilation: {e:?}");
                             })
                             .ok();
                     } else if relative_path.starts_with("pages/") {
                         compile_template(relative_path.to_path_buf(), &loader, &progress)
                             .map_err(|e| {
-                                println!("Error in compilation: {:?}", e);
+                                println!("Error in compilation: {e:?}");
                             })
                             .ok();
                     } else if relative_path.starts_with("assets/") {
@@ -135,7 +135,7 @@ pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
                         hooks::During::PostBuild,
                     ))
                     .map_err(|e| {
-                        println!("Error in compilation: {:?}", e);
+                        println!("Error in compilation: {e:?}");
                     })
                     .ok();
 
@@ -149,7 +149,7 @@ pub async fn run(progress: ProgressBar) -> Result<(), Box<dyn Error>> {
                 }
             }
         }
-        Err(e) => println!("watch error: {:?}", e),
+        Err(e) => println!("watch error: {e:?}"),
     })?;
 
     watcher.watch(Path::new("."), RecursiveMode::Recursive)?;

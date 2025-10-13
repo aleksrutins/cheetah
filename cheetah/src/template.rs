@@ -1,7 +1,5 @@
-use html5ever::{local_name, ns, QualName};
-use kuchiki::{traits::*, Attribute, ExpandedName, NodeData, NodeRef};
-use lazy_static::lazy_static;
-use regex::{Captures, Regex};
+use html5ever::{QualName, local_name, ns};
+use kuchiki::{Attribute, ExpandedName, NodeData, NodeRef, traits::*};
 use std::{
     cell::RefCell,
     collections::{BTreeMap, HashMap},
@@ -100,7 +98,7 @@ impl Template {
             if let Some(name) = &ctx.component_name {
                 let mut scripts = scripts_ref.borrow_mut();
 
-                let script_name = format!("{}.registrar.js", name);
+                let script_name = format!("{name}.registrar.js");
                 if scripts.get(&script_name).is_none() {
                     scripts.insert(
                         script_name.clone(),
@@ -123,7 +121,7 @@ impl Template {
                     && ctx.component_name.is_some()
                 {
                     if let Some(name) = &ctx.component_name {
-                        let script_name = format!("{}.registrar.js", name);
+                        let script_name = format!("{name}.registrar.js");
                         if scripts.get(&script_name).is_none() {
                             scripts.insert(
                                 script_name.clone(),
@@ -227,7 +225,7 @@ impl Template {
                     ExpandedName::new("", "src"),
                     Attribute {
                         prefix: None,
-                        value: format!("/_scripts/{}", name),
+                        value: format!("/_scripts/{name}"),
                     },
                 );
                 attrs.insert(

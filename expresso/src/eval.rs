@@ -1,4 +1,4 @@
-use std::{any::Any, collections::HashMap, error::Error, ffi::NulError, fmt::Display};
+use std::{collections::HashMap, error::Error, fmt::Display};
 
 use crate::parser::ExprValue;
 
@@ -70,11 +70,12 @@ pub fn eval<'a>(
     })
 }
 
+#[cfg(test)]
 pub(crate) fn test<'a>(args: Vec<EvalResult>) -> EvalResult {
-    if let Some(EvalResult::String(str)) = args.get(0)
+    if let Some(EvalResult::String(str)) = args.first()
         && let Some(EvalResult::Number(n)) = args.get(1)
     {
-        EvalResult::String(format!("{} {}", str, n))
+        EvalResult::String(format!("{str} {n}"))
     } else {
         EvalResult::None
     }
@@ -83,7 +84,7 @@ pub(crate) fn test<'a>(args: Vec<EvalResult>) -> EvalResult {
 #[cfg(test)]
 mod tests {
     use crate::eval::test;
-    use std::{any::Any, collections::HashMap, error::Error};
+    use std::collections::HashMap;
 
     use crate::{
         eval::{EvalContext, EvalFn, EvalResult, eval},
@@ -103,8 +104,8 @@ mod tests {
                     vec![ExprValue::Ident("hello"), ExprValue::Number(3.14)]
                 ),
                 &EvalContext {
-                    fns: fns,
-                    vars: vars
+                    fns,
+                    vars
                 }
             )
             .unwrap(),

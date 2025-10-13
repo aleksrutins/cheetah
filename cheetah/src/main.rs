@@ -45,7 +45,7 @@ fn copy_assets_recursive(dir: String, progress: &ProgressBar) -> Result<(), Box<
         for asset in assets.flatten() {
             if asset.file_type()?.is_dir() {
                 let full_path = format!("{}/{}", dir, asset.file_name().to_string_lossy());
-                fs::create_dir_all(format!("_build/pages/{}", full_path))?;
+                fs::create_dir_all(format!("_build/pages/{full_path}"))?;
                 copy_assets_recursive(full_path, progress)?;
             } else {
                 progress.set_message(format!(
@@ -86,7 +86,7 @@ fn compile_template(
         attrs: BTreeMap::new(),
         scripts: Rc::new(RefCell::new(HashMap::new())),
     })?;
-    fs::write(out_path, format!("<!doctype html>{}", output))?;
+    fs::write(out_path, format!("<!doctype html>{output}"))?;
     for (script_name, registrar) in scripts {
         let mut scripts = registrar.connected_scripts;
         scripts.sort();
@@ -105,11 +105,11 @@ registerComponent(`{}`, `{}`, [{}]);
                 .replace("${", "\\${"),
             scripts
                 .iter()
-                .map(|script| format!("async function() {{{}}}", script))
+                .map(|script| format!("async function() {{{script}}}"))
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        fs::write(format!("_build/pages/_scripts/{}", script_name), contents)?;
+        fs::write(format!("_build/pages/_scripts/{script_name}"), contents)?;
     }
     Ok(())
 }

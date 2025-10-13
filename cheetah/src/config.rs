@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Mutex};
+use std::sync::Mutex;
 
 use config::{Config, ConfigError, Environment, File, FileFormat};
 use lazy_static::lazy_static;

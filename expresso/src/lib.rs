@@ -8,7 +8,7 @@ pub mod eval;
 pub mod parser;
 
 pub fn eval_str(expr: &str, ctx: &EvalContext) -> Result<EvalResult, Box<dyn Error>> {
-    return Ok(crate::eval::eval(parse_expr(expr)?, ctx)?);
+    Ok(crate::eval::eval(parse_expr(expr)?, ctx)?)
 }
 
 #[cfg(test)]
@@ -30,8 +30,8 @@ mod tests {
             eval_str(
                 "test(hello, 3.14)",
                 &EvalContext {
-                    fns: fns,
-                    vars: vars
+                    fns,
+                    vars
                 }
             )
             .unwrap(),

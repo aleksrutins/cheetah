@@ -1,4 +1,4 @@
-use kuchiki::{Attribute, ElementData, ExpandedName, NodeData};
+use kuchiki::{Attribute, ExpandedName, NodeData};
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
@@ -6,7 +6,7 @@ use crate::template::TemplateContext;
 
 pub struct BindingContext<'a> {
     node: &'a NodeData,
-    ctx: &'a TemplateContext
+    ctx: &'a TemplateContext,
 }
 
 lazy_static! {
@@ -16,9 +16,7 @@ lazy_static! {
 
 impl<'a> BindingContext<'a> {
     pub fn new(node: &'a NodeData, ctx: &'a TemplateContext) -> Self {
-        Self {
-            node, ctx
-        }
+        Self { node, ctx }
     }
 
     pub fn expand_attributes(&self) {
@@ -38,7 +36,8 @@ impl<'a> BindingContext<'a> {
                         ),
                         Attribute {
                             prefix: None,
-                            value: self.ctx
+                            value: self
+                                .ctx
                                 .attrs
                                 .get(&ExpandedName::new("", value.value))
                                 .map(|attr| attr.value.clone())
@@ -56,7 +55,8 @@ impl<'a> BindingContext<'a> {
             *text = BIND_REGEX
                 .replace_all(&text, |caps: &Captures| {
                     if let Some(name) = caps.get(1) {
-                        self.ctx.attrs
+                        self.ctx
+                            .attrs
                             .get(&ExpandedName::new("", name.as_str()))
                             .map(|attr| attr.value.clone())
                             .unwrap_or_default()
@@ -65,10 +65,7 @@ impl<'a> BindingContext<'a> {
                     }
                 })
                 .to_string();
-            *text = LITERAL_BIND_REGEX
-                .replace_all(&text, "{{")
-                .to_string();
-
+            *text = LITERAL_BIND_REGEX.replace_all(&text, "{{").to_string();
         }
     }
 }
