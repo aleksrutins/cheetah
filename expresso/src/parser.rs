@@ -6,7 +6,7 @@ use pest_derive::Parser;
 #[grammar = "grammar.pest"]
 struct ExprParser;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ExprValue<'a> {
     Object(Vec<(&'a str, ExprValue<'a>)>),
     Array(Vec<ExprValue<'a>>),
@@ -71,6 +71,7 @@ pub fn parse_expr(expr: &str) -> Result<ExprValue, Error<Rule>> {
     Ok(parse_value(parsed))
 }
 
+#[cfg(test)]
 mod tests {
     use crate::parser::{ExprValue, parse_expr};
 

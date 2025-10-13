@@ -1,4 +1,3 @@
 [workspace]
 members = ["cheetah", "expresso", "velociraptor"]
 resolver = "3"
-default-member = "cheetah"
