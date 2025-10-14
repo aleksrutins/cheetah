@@ -1,10 +1,13 @@
 use kuchiki::{Attribute, ExpandedName, NodeData};
+use kuchikikiki as kuchiki;
 use lazy_static::lazy_static;
+use locrian::{eval::EvalResult, parser::ExprValue};
 use regex::{Captures, Regex};
 
 use crate::template::TemplateContext;
 
 pub struct BindingContext<'a> {
+    component_name: Option<String>,
     node: &'a NodeData,
     ctx: &'a TemplateContext,
 }
@@ -15,8 +18,33 @@ lazy_static! {
 }
 
 impl<'a> BindingContext<'a> {
-    pub fn new(node: &'a NodeData, ctx: &'a TemplateContext) -> Self {
-        Self { node, ctx }
+    pub fn new(
+        component_name: Option<String>,
+        node: &'a NodeData,
+        ctx: &'a TemplateContext,
+    ) -> Self {
+        Self {
+            component_name,
+            node,
+            ctx,
+        }
+    }
+
+    pub fn locrian_ctx(&self) -> locrian::eval::EvalContext<'a> {
+        let mut ctx = locrian::stdlib::STDLIB.with_var(
+            "$me",
+            self.component_name
+                .clone()
+                .map(ExprValue::String)
+                .unwrap_or(ExprValue::Null),
+        );
+        for (key, value) in &self.ctx.attrs {
+            ctx.vars.insert(
+                key.local.to_string(),
+                ExprValue::String(value.value.clone()),
+            );
+        }
+        ctx
     }
 
     pub fn expand_attributes(&self) {
@@ -36,12 +64,13 @@ impl<'a> BindingContext<'a> {
                         ),
                         Attribute {
                             prefix: None,
-                            value: self
-                                .ctx
-                                .attrs
-                                .get(&ExpandedName::new("", value.value))
-                                .map(|attr| attr.value.clone())
-                                .unwrap_or_default(),
+                            value: if let Ok(EvalResult::String(s)) =
+                                locrian::eval_str(&value.value, self.locrian_ctx())
+                            {
+                                s
+                            } else {
+                                "".to_string()
+                            },
                         },
                     );
                 }
@@ -54,12 +83,11 @@ impl<'a> BindingContext<'a> {
             let mut text = text_ref.borrow_mut();
             *text = BIND_REGEX
                 .replace_all(&text, |caps: &Captures| {
-                    if let Some(name) = caps.get(1) {
-                        self.ctx
-                            .attrs
-                            .get(&ExpandedName::new("", name.as_str()))
-                            .map(|attr| attr.value.clone())
-                            .unwrap_or_default()
+                    if let Some(expr) = caps.get(1)
+                        && let Ok(EvalResult::String(s)) =
+                            locrian::eval_str(expr.as_str(), self.locrian_ctx())
+                    {
+                        s
                     } else {
                         "".to_string()
                     }

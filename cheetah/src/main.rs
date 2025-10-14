@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{BTreeMap, HashMap},
+    collections::HashMap,
     env,
     error::Error,
     fmt::Display,
@@ -10,10 +10,10 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use indexmap::IndexMap;
 use indicatif::{ProgressBar, ProgressStyle};
 use template::TemplateLoader;
 
-#[macro_use]
 extern crate html5ever;
 mod bindings;
 mod config;
@@ -83,7 +83,7 @@ fn compile_template(
         loader: loader.clone(),
         contents: None,
         component_name: None,
-        attrs: BTreeMap::new(),
+        attrs: IndexMap::new(),
         scripts: Rc::new(RefCell::new(HashMap::new())),
     })?;
     fs::write(out_path, format!("<!doctype html>{output}"))?;
@@ -95,14 +95,9 @@ fn compile_template(
             "
 import {{ registerComponent }} from './component.js';
 
-registerComponent(`{}`, `{}`, [{}]);
+registerComponent(`{}`, [{}]);
         ",
             registrar.name,
-            registrar
-                .template
-                .html_str
-                .replace('`', "\\`")
-                .replace("${", "\\${"),
             scripts
                 .iter()
                 .map(|script| format!("async function() {{{script}}}"))

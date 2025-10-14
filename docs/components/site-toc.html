@@ -1,5 +1,5 @@
 <nav>
-    <h1 id="site-title">Cheetah</h1>
+    <h1 class="site-title">Cheetah</h1>
 
     <nav-section>Start Here</nav-section>
     <nav-link url="/">Introduction</nav-link>
@@ -13,7 +13,7 @@
 </nav>
 
 <style>
-    :host {
+    {{$me}} {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
@@ -29,11 +29,11 @@
         min-width: fit-content;
     }
 
-    nav {
+    {{$me}} nav {
         padding-right: 1.5em;
     }
 
-    h1#site-title {
+    {{$me}} h1.site-title {
         border-bottom: 1px solid #aaa;
         padding: 5px;
         text-align: center;

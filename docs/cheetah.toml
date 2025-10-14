@@ -1,3 +1,4 @@
+always_hydrate = true
 [[hooks]]
 name = "test"
 during = "PostBuild"

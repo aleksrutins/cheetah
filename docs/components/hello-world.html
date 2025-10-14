@@ -1,12 +1,11 @@
-<div>
-Hello World! This is a component. {{hi}}
-</div>
+<div>Hello World! This is a component. {{hi}}</div>
 <p>Note the scoped styles, through Shadow DOM</p>
 
 <other-thing></other-thing>
 
 <style>
-  div, p {
-    font-style: italic;
-  }
+    {{$me}} div,
+    {{$me}} p {
+        font-style: italic;
+    }
 </style>

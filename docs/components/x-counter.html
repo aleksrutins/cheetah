@@ -1,9 +1,9 @@
-<button id="increment">+</button>
-<span id="count">0</span>
-<button id="decrement">-</button>
+<button class="increment">+</button>
+<span class="count">0</span>
+<button class="decrement">-</button>
 
 <style>
-    :host {
+    {{$me}} {
         display: block;
         box-sizing: content-box;
         padding: 5px;
@@ -15,15 +15,15 @@
         background-color: #f6f6f7;
     }
 
-    button,
-    span {
+    {{$me}} button,
+    {{$me}} span {
         display: block;
         text-align: center;
         width: 100%;
         margin: 2px;
     }
 
-    button {
+    {{$me}} button {
         border-radius: 5px;
         border: none;
         background-color: #299c63;
@@ -45,10 +45,10 @@
 </style>
 
 <script>
-    const decrement = this.shadowRoot.querySelector("#decrement");
-    const increment = this.shadowRoot.querySelector("#increment");
+    const decrement = this.querySelector(".decrement");
+    const increment = this.querySelector(".increment");
 
-    const count = this.shadowRoot.querySelector("#count");
+    const count = this.querySelector(".count");
 
     increment.addEventListener(
         "click",

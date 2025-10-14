@@ -1,13 +1,8 @@
 use html5ever::{QualName, local_name, ns};
+use indexmap::IndexMap;
 use kuchiki::{Attribute, ExpandedName, NodeData, NodeRef, traits::*};
-use std::{
-    cell::RefCell,
-    collections::{BTreeMap, HashMap},
-    error::Error,
-    fs,
-    ops::DerefMut,
-    rc::Rc,
-};
+use kuchikikiki as kuchiki;
+use std::{cell::RefCell, collections::HashMap, error::Error, fs, ops::DerefMut, rc::Rc};
 
 use crate::{bindings::BindingContext, config::SETTINGS, markdown};
 
@@ -33,7 +28,7 @@ pub struct TemplateContext {
     pub loader: TemplateLoader,
     pub contents: Option<Vec<NodeRef>>,
     pub component_name: Option<String>,
-    pub attrs: BTreeMap<ExpandedName, Attribute>,
+    pub attrs: IndexMap<ExpandedName, Attribute>,
     pub scripts: Scripts,
 }
 
@@ -149,18 +144,22 @@ impl Template {
             self.expand_tree_recursive(&mut child, scripts_ref, registrar, ctx)?;
         }
 
-        let binding = BindingContext::new(node.data(), ctx);
+        let binding = BindingContext::new(ctx.component_name.clone(), node.data(), ctx);
         match node.data() {
             NodeData::Element(el) => {
                 binding.expand_attributes();
 
                 if el.name.local.to_string().contains('-') {
+                    let contents = node.children().collect::<Vec<_>>();
+                    for ele in node.children() {
+                        ele.detach();
+                    }
                     let (rendered_contents, new_scripts) = ctx
                         .loader
                         .load(&("components/".to_string() + &el.name.local + ".html"))?
                         .render(&TemplateContext {
                             loader: ctx.loader.clone(),
-                            contents: None,
+                            contents: Some(contents),
                             attrs: el.attributes.borrow().map.clone(),
                             component_name: Some(el.name.local.to_string()),
                             scripts: scripts_ref.clone(),
@@ -177,16 +176,8 @@ impl Template {
                             value: "open".to_string(),
                         },
                     );
-                    let shadow_root = NodeRef::new_element(
-                        QualName::new(None, ns!(html), local_name!("template")),
-                        attrs,
-                    );
-                    shadow_root.append(rendered_contents);
-                    node.append(shadow_root);
-                } else if el.name.ns == ns!(html)
-                    && el.name.local == *"slot"
-                    && ctx.component_name.is_none()
-                {
+                    node.append(rendered_contents);
+                } else if el.name.ns == ns!(html) && el.name.local == *"slot" {
                     if let Some(contents) = &ctx.contents {
                         for elem in contents {
                             node.append(elem.clone());
@@ -256,7 +247,8 @@ impl Template {
     ) -> Result<(NodeRef, HashMap<String, ElementRegistrar>), Box<dyn Error>> {
         match &self.extends {
             Some(tmpl) => {
-                BindingContext::new(tmpl.data(), ctx).expand_attributes();
+                BindingContext::new(ctx.component_name.clone(), tmpl.data(), ctx)
+                    .expand_attributes();
 
                 let attrs = tmpl.as_element().unwrap().attributes.borrow();
                 let (contents, scripts) = self.render_basic(ctx)?;
